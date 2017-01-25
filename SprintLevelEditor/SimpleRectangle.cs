@@ -22,10 +22,10 @@ namespace SprintLevelEditor
             Height = height;
         }
 
-        public static SimpleRectangle fromWall(Wall wall)
+        public static SimpleRectangle fromWall(Wall wall, int blockSize, int xOffset, int yOffset)
         {
             Rectangle rectangle = wall.sprite.drawRect;
-            return new SimpleRectangle(Math.Max(1, rectangle.X / 10), Math.Max(1, rectangle.Y / 10), Math.Max(1, rectangle.Width / 20), Math.Max(1, rectangle.Height / 20));
+            return new SimpleRectangle(Math.Max(0, (rectangle.X - xOffset) / blockSize), Math.Max(0, (rectangle.Y - yOffset) / blockSize), Math.Max(1, rectangle.Width / blockSize), Math.Max(1, rectangle.Height / blockSize));
         }
     }
 }

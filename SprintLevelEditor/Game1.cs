@@ -117,9 +117,25 @@ namespace SprintLevelEditor
         {
             List<SimpleRectangle> simpleRectangles = new List<SimpleRectangle>();
 
+            int xOffset = oldWalls[0].sprite.drawRect.X;
+            int yOffset = oldWalls[0].sprite.drawRect.Y;
+
             foreach (Wall oldWall in oldWalls)
             {
-                simpleRectangles.Add(SimpleRectangle.fromWall(oldWall));
+                if (oldWall.sprite.drawRect.X < xOffset)
+                {
+                    xOffset = oldWall.sprite.drawRect.X;
+                }
+
+                if (oldWall.sprite.drawRect.Y < yOffset)
+                {
+                    yOffset = oldWall.sprite.drawRect.Y;
+                }
+            }
+
+            foreach (Wall oldWall in oldWalls)
+            {
+                simpleRectangles.Add(SimpleRectangle.fromWall(oldWall, BLOCK_SIZE, xOffset, yOffset));
             }
 
             string json = JsonConvert.SerializeObject(simpleRectangles.ToArray(), Formatting.Indented);
