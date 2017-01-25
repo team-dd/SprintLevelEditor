@@ -1,0 +1,128 @@
+[
+  {
+    "X": 1,
+    "Y": 1,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 3,
+    "Y": 2,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 5,
+    "Y": 2,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 5,
+    "Y": 4,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 6,
+    "Y": 3,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 1,
+    "Y": 1,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 1,
+    "Y": 1,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 4,
+    "Y": 8,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 8,
+    "Y": 6,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 12,
+    "Y": 11,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 14,
+    "Y": 6,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 6,
+    "Y": 11,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 3,
+    "Y": 16,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 8,
+    "Y": 16,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 16,
+    "Y": 14,
+    "Width": 2,
+    "Height": 1
+  },
+  {
+    "X": 24,
+    "Y": 8,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 27,
+    "Y": 16,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 17,
+    "Y": 21,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 28,
+    "Y": 14,
+    "Width": 2,
+    "Height": 1
+  },
+  {
+    "X": 16,
+    "Y": 29,
+    "Width": 1,
+    "Height": 1
+  },
+  {
+    "X": 27,
+    "Y": 25,
+    "Width": 4,
+    "Height": 1
+  }
+]

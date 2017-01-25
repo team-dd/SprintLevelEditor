@@ -16,7 +16,8 @@ namespace SprintLevelEditor
     {
         const string MainGame = "game1";
 
-        public static int BLOCK_SIZE = 10;
+        public int BLOCK_SIZE = 10;
+        public static int MAX_BLOCK_SIZE = 50;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -31,6 +32,7 @@ namespace SprintLevelEditor
         Vector2 startingHeldMousePosition;
         KeyboardState keyboardState;
         KeyboardState previousKeyboardState;
+        MouseState previousMouseState;
 
         public Game1()
         {
@@ -53,6 +55,7 @@ namespace SprintLevelEditor
         {
             // TODO: Add your initialization logic here
             previousKeyboardState = Keyboard.GetState();
+            previousMouseState = Mouse.GetState();
             base.Initialize();
         }
 
@@ -118,6 +121,12 @@ namespace SprintLevelEditor
             redoQueue.RemoveAt(redoQueue.Count - 1);
         }
 
+        public void startFresh()
+        {
+            oldWalls = new List<Wall>();
+            redoQueue = new List<Wall>();
+        }
+
         public void MainUpdate(GameTimeWrapper gameTime)
         {
             world.gameStates[MainGame].UpdateCurrentCamera(gameTime);
@@ -127,6 +136,8 @@ namespace SprintLevelEditor
             {
                 isHoldingLeft = true;
                 startingHeldMousePosition = Mouse.GetState().Position.ToVector2();
+                startingHeldMousePosition.X = startingHeldMousePosition.X - (startingHeldMousePosition.X % BLOCK_SIZE);
+                startingHeldMousePosition.Y = startingHeldMousePosition.Y - (startingHeldMousePosition.Y % BLOCK_SIZE);
             }
             else if (Mouse.GetState().LeftButton == ButtonState.Released && startingHeldMousePosition != Vector2.Zero)
             {
@@ -158,10 +169,81 @@ namespace SprintLevelEditor
                 redo();
             }
 
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.N) && previousKeyboardState.IsKeyUp(Keys.N))
+            {
+                startFresh();
+            }
+            Console.WriteLine(previousMouseState.ScrollWheelValue);
+
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue))
+            {
+                if (BLOCK_SIZE == 1)
+                {
+                    return;
+                }
+
+                List<Wall> scaledOldWalls = new List<Wall>();
+                foreach (Wall oldWall in oldWalls)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
+                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
+                    scaledOldWalls.Add(scaledOldWall);
+                }
+                oldWalls = scaledOldWalls;
+
+                List<Wall> scaledRedoQueue = new List<Wall>();
+                foreach (Wall oldWall in redoQueue)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
+                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
+                    scaledRedoQueue.Add(scaledOldWall);
+                }
+                redoQueue = scaledRedoQueue;
+
+                BLOCK_SIZE--;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue))
+            {
+                if (BLOCK_SIZE == MAX_BLOCK_SIZE)
+                {
+                    return;
+                }
+
+                List<Wall> scaledOldWalls = new List<Wall>();
+                foreach (Wall oldWall in oldWalls)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                    scaledOldWalls.Add(scaledOldWall);
+                }
+                oldWalls = scaledOldWalls;
+
+                List<Wall> scaledRedoQueue = new List<Wall>();
+                foreach (Wall oldWall in redoQueue)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                    scaledRedoQueue.Add(scaledOldWall);
+                }
+                redoQueue = scaledRedoQueue;
+
+                BLOCK_SIZE++;
+            }
+
             circle.Update(gameTime);
             wall.Update(gameTime);
 
             previousKeyboardState = keyboardState;
+            previousMouseState = Mouse.GetState();
 
             base.Update(gameTime);
         }
@@ -202,15 +284,15 @@ namespace SprintLevelEditor
             MouseState mouseState = Mouse.GetState();
             int mouseX = mouseState.Position.X;
             int mouseY = mouseState.Position.Y;
-
-            circle.position = new Vector2(mouseX, mouseY);
             
             if (!isHoldingLeft)
             {
-                wall.sprite.position = new Vector2(mouseX - (mouseX % BLOCK_SIZE), mouseY - (mouseY % BLOCK_SIZE));
+                wall.sprite.position = new Vector2(-100, -100);
+                circle.position = new Vector2(mouseX, mouseY);
             }
             else
             {
+                circle.position = new Vector2(-100, -100);
                 float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) - (Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) % BLOCK_SIZE));
                 float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) - (Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) % BLOCK_SIZE));
 
