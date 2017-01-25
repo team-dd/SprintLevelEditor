@@ -18,6 +18,7 @@ namespace SprintLevelEditor
 
         public int BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
+        public int MOVE_SPEED = 3;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -175,20 +176,14 @@ namespace SprintLevelEditor
             }
             Console.WriteLine(previousMouseState.ScrollWheelValue);
 
-            if (keyboardState.IsKeyDown(Keys.LeftControl) && (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue))
+            if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE != 1 && !isHoldingLeft)
             {
-                if (BLOCK_SIZE == 1)
-                {
-                    return;
-                }
-
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
                     Rectangle rectangle = oldWall.sprite.drawRect;
                     scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
                     scaledOldWalls.Add(scaledOldWall);
                 }
                 oldWalls = scaledOldWalls;
@@ -199,7 +194,6 @@ namespace SprintLevelEditor
                     Wall scaledOldWall = new Wall(graphics);
                     Rectangle rectangle = oldWall.sprite.drawRect;
                     scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
                     scaledRedoQueue.Add(scaledOldWall);
                 }
                 redoQueue = scaledRedoQueue;
@@ -207,20 +201,14 @@ namespace SprintLevelEditor
                 BLOCK_SIZE--;
             }
 
-            if (keyboardState.IsKeyDown(Keys.LeftControl) && (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue))
+            if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE != MAX_BLOCK_SIZE && !isHoldingLeft)
             {
-                if (BLOCK_SIZE == MAX_BLOCK_SIZE)
-                {
-                    return;
-                }
-
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
                     Rectangle rectangle = oldWall.sprite.drawRect;
                     scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
                     scaledOldWalls.Add(scaledOldWall);
                 }
                 oldWalls = scaledOldWalls;
@@ -231,12 +219,103 @@ namespace SprintLevelEditor
                     Wall scaledOldWall = new Wall(graphics);
                     Rectangle rectangle = oldWall.sprite.drawRect;
                     scaledOldWall.sprite.drawRect = new Rectangle((rectangle.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1), (rectangle.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1), (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
                     scaledRedoQueue.Add(scaledOldWall);
                 }
                 redoQueue = scaledRedoQueue;
 
                 BLOCK_SIZE++;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
+            {
+                List<Wall> scaledOldWalls = new List<Wall>();
+                foreach (Wall oldWall in oldWalls)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X, rectangle.Y - MOVE_SPEED, rectangle.Width, rectangle.Height);
+                    scaledOldWalls.Add(scaledOldWall);
+                }
+                oldWalls = scaledOldWalls;
+
+                List<Wall> scaledRedoQueue = new List<Wall>();
+                foreach (Wall oldWall in redoQueue)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X, rectangle.Y - MOVE_SPEED, rectangle.Width, rectangle.Height);
+                    scaledRedoQueue.Add(scaledOldWall);
+                }
+                redoQueue = scaledRedoQueue;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.Up) && !isHoldingLeft)
+            {
+                List<Wall> scaledOldWalls = new List<Wall>();
+                foreach (Wall oldWall in oldWalls)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X, rectangle.Y + MOVE_SPEED, rectangle.Width, rectangle.Height);
+                    scaledOldWalls.Add(scaledOldWall);
+                }
+                oldWalls = scaledOldWalls;
+
+                List<Wall> scaledRedoQueue = new List<Wall>();
+                foreach (Wall oldWall in redoQueue)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X, rectangle.Y + MOVE_SPEED, rectangle.Width, rectangle.Height);
+                    scaledRedoQueue.Add(scaledOldWall);
+                }
+                redoQueue = scaledRedoQueue;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.Left) && !isHoldingLeft)
+            {
+                List<Wall> scaledOldWalls = new List<Wall>();
+                foreach (Wall oldWall in oldWalls)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X + MOVE_SPEED, rectangle.Y, rectangle.Width, rectangle.Height);
+                    scaledOldWalls.Add(scaledOldWall);
+                }
+                oldWalls = scaledOldWalls;
+
+                List<Wall> scaledRedoQueue = new List<Wall>();
+                foreach (Wall oldWall in redoQueue)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X + MOVE_SPEED, rectangle.Y, rectangle.Width, rectangle.Height);
+                    scaledRedoQueue.Add(scaledOldWall);
+                }
+                redoQueue = scaledRedoQueue;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.Right) && !isHoldingLeft)
+            {
+                List<Wall> scaledOldWalls = new List<Wall>();
+                foreach (Wall oldWall in oldWalls)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X - MOVE_SPEED, rectangle.Y, rectangle.Width, rectangle.Height);
+                    scaledOldWalls.Add(scaledOldWall);
+                }
+                oldWalls = scaledOldWalls;
+
+                List<Wall> scaledRedoQueue = new List<Wall>();
+                foreach (Wall oldWall in redoQueue)
+                {
+                    Wall scaledOldWall = new Wall(graphics);
+                    Rectangle rectangle = oldWall.sprite.drawRect;
+                    scaledOldWall.sprite.drawRect = new Rectangle(rectangle.X - MOVE_SPEED, rectangle.Y, rectangle.Width, rectangle.Height);
+                    scaledRedoQueue.Add(scaledOldWall);
+                }
+                redoQueue = scaledRedoQueue;
             }
 
             circle.Update(gameTime);
