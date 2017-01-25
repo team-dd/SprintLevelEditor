@@ -19,6 +19,7 @@ namespace SprintLevelEditor
 
         public int BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
+        public static int MIN_BLOCK_SIZE = 3;
         public int MOVE_SPEED = 10;
         public static int SCREEN_WIDTH = 800;
         public static int SCREEN_HEIGHT = 800;
@@ -161,14 +162,14 @@ namespace SprintLevelEditor
             world.gameStates[MainGame].UpdateCurrentCamera(gameTime);
             keyboardState = Keyboard.GetState();
 
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed && startingHeldMousePosition == Vector2.Zero)
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
                 isHoldingLeft = true;
                 startingHeldMousePosition = Mouse.GetState().Position.ToVector2();
                 startingHeldMousePosition.X = startingHeldMousePosition.X - (startingHeldMousePosition.X % BLOCK_SIZE);
                 startingHeldMousePosition.Y = startingHeldMousePosition.Y - (startingHeldMousePosition.Y % BLOCK_SIZE);
             }
-            else if (Mouse.GetState().LeftButton == ButtonState.Released && startingHeldMousePosition != Vector2.Zero)
+            else if (Mouse.GetState().LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
             {
                 isHoldingLeft = false;
 
@@ -227,6 +228,7 @@ namespace SprintLevelEditor
 
                 BLOCK_SIZE--;
                 MOVE_SPEED = BLOCK_SIZE;
+                wall.sprite.drawRect = new Rectangle(0, 0, BLOCK_SIZE, BLOCK_SIZE);
                 makeGrid();
             }
 
@@ -254,6 +256,7 @@ namespace SprintLevelEditor
 
                 BLOCK_SIZE++;
                 MOVE_SPEED = BLOCK_SIZE;
+                wall.sprite.drawRect = new Rectangle(0, 0, BLOCK_SIZE, BLOCK_SIZE);
                 makeGrid();
             }
 
