@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using GLX;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,6 +20,8 @@ namespace SprintLevelEditor
         public int BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
         public int MOVE_SPEED = 3;
+        public static int SCREEN_WIDTH = 800;
+        public static int SCREEN_HEIGHT = 800;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -28,6 +31,7 @@ namespace SprintLevelEditor
         Wall wall;
         List<Wall> oldWalls;
         List<Wall> redoQueue;
+        List<Line> grid;
         bool isHoldingLeft;
         bool isHoldingRight;
         Vector2 startingHeldMousePosition;
@@ -38,12 +42,15 @@ namespace SprintLevelEditor
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = SCREEN_WIDTH;
+            graphics.PreferredBackBufferHeight = SCREEN_HEIGHT;
             Content.RootDirectory = "Content";
             isHoldingLeft = false;
             isHoldingRight = false;
             startingHeldMousePosition = Vector2.Zero;
             oldWalls = new List<Wall>();
             redoQueue = new List<Wall>();
+            grid = new List<Line>();
         }
 
         /// <summary>
@@ -80,7 +87,28 @@ namespace SprintLevelEditor
             wall = new Wall(graphics);
             wall.sprite.drawRect = new Rectangle(0, 0, BLOCK_SIZE, BLOCK_SIZE);
 
-            // TODO: use this.Content to load your game content here
+            makeGrid();
+        }
+
+        public void makeGrid()
+        {
+            grid = new List<Line>();
+            // grid
+            foreach (int i in Enumerable.Range(1, SCREEN_HEIGHT / BLOCK_SIZE))
+            {
+                Vector2 start = new Vector2(i * BLOCK_SIZE, 0);
+                Vector2 end = new Vector2(i * BLOCK_SIZE, SCREEN_HEIGHT);
+                Line line = new Line(graphics, Line.Type.Point, start, end, 1);
+                grid.Add(line);
+            }
+
+            foreach (int j in Enumerable.Range(1, SCREEN_WIDTH / BLOCK_SIZE))
+            {
+                Vector2 start = new Vector2(0, j * BLOCK_SIZE);
+                Vector2 end = new Vector2(SCREEN_WIDTH, j * BLOCK_SIZE);
+                Line line = new Line(graphics, Line.Type.Point, start, end, 1);
+                grid.Add(line);
+            }
         }
 
         public void saveGame()
@@ -94,7 +122,6 @@ namespace SprintLevelEditor
 
             string json = JsonConvert.SerializeObject(simpleRectangles.ToArray(), Formatting.Indented);
             int epoch = (int)((DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
-            Console.WriteLine(Path.Combine(Environment.CurrentDirectory, "level-" + epoch + ".json"));
             File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "level-" + epoch + ".json"), json);
         }
 
@@ -174,7 +201,6 @@ namespace SprintLevelEditor
             {
                 startFresh();
             }
-            Console.WriteLine(previousMouseState.ScrollWheelValue);
 
             if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE != 1 && !isHoldingLeft)
             {
@@ -199,6 +225,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
 
                 BLOCK_SIZE--;
+                makeGrid();
             }
 
             if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE != MAX_BLOCK_SIZE && !isHoldingLeft)
@@ -224,6 +251,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
 
                 BLOCK_SIZE++;
+                makeGrid();
             }
 
             if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
@@ -380,8 +408,8 @@ namespace SprintLevelEditor
                     : (int) startingHeldMousePosition.X;
 
                 int drawY = Mouse.GetState().Position.Y < startingHeldMousePosition.Y
-                    ? (int)(startingHeldMousePosition.Y - height)
-                    : (int)startingHeldMousePosition.Y;
+                    ? (int) (startingHeldMousePosition.Y - height)
+                    : (int) startingHeldMousePosition.Y;
 
                 wall.sprite.drawRect = new Rectangle(drawX, drawY, (int) width, (int) height);
                 wall.sprite.position = new Vector2((startingHeldMousePosition.X + Mouse.GetState().Position.X) / 2, (startingHeldMousePosition.Y + Mouse.GetState().Position.Y) / 2);
@@ -395,12 +423,16 @@ namespace SprintLevelEditor
         public void MainDraw()
         {
             world.BeginDraw();
-            world.Draw(circle.Draw);
-            world.Draw(wall.Draw);
+            foreach (Line line in grid)
+            {
+                world.Draw(line.Draw);
+            }
             foreach (Wall oldWall in oldWalls)
             {
                 world.Draw(oldWall.Draw);
             }
+            world.Draw(circle.Draw);
+            world.Draw(wall.Draw);
             world.EndDraw();
         }
     }
