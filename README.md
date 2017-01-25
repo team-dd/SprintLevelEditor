@@ -9,8 +9,10 @@ This is a WIP level editor being created for [Sprint/DoubleDash](https://github.
 
 ## Usage
 
-- **Mouse**: Click, drag and release to create rectangles
+- **Mouse**: Left-click, drag and release to create rectangles
 - **Ctrl+Z**: Undo
 - **Ctrl+Y**: Redo
 - **Ctrl+S**: Saves a JSON format of your level in the save directory as the executable
 - **Ctrl+N**: Start working on a new level
+- **Scroll**: Zoom in and out
+- **Arrow Keys**: Pan around the screen
