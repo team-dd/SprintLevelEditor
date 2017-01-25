@@ -204,7 +204,7 @@ namespace SprintLevelEditor
                 startFresh();
             }
 
-            if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE != 1 && !isHoldingLeft)
+            if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE > MIN_BLOCK_SIZE && !isHoldingLeft)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
@@ -232,7 +232,7 @@ namespace SprintLevelEditor
                 makeGrid();
             }
 
-            if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE != MAX_BLOCK_SIZE && !isHoldingLeft)
+            if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE < MAX_BLOCK_SIZE && !isHoldingLeft)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
@@ -400,8 +400,6 @@ namespace SprintLevelEditor
             
             if (!isHoldingLeft)
             {
-                //wall.sprite.position = new Vector2(-100, -100);
-                //circle.position = new Vector2(mouseX, mouseY);
                 wall.sprite.position = new Vector2(mouseX - mouseX%BLOCK_SIZE, mouseY - mouseY%BLOCK_SIZE);
             }
             else
