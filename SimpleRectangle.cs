@@ -13,21 +13,19 @@ namespace SprintLevelEditor
         public int Y;
         public int Width;
         public int Height;
-        public Vector2 Position;
 
-        public SimpleRectangle(int x, int y, int width, int height, Vector2 position)
+        public SimpleRectangle(int x, int y, int width, int height)
         {
             X = x;
             Y = y;
             Width = width;
             Height = height;
-            Position = position;
         }
 
         public static SimpleRectangle fromWall(Wall wall)
         {
             Rectangle rectangle = wall.sprite.drawRect;
-            return new SimpleRectangle(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, rectangle.Location.ToVector2());
+            return new SimpleRectangle(Math.Max(1, rectangle.X / 10), Math.Max(1, rectangle.Y / 10), Math.Max(1, rectangle.Width / 20), Math.Max(1, rectangle.Height / 20));
         }
     }
 }

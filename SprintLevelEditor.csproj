@@ -42,7 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Circle.cs" />
-    <Compile Include="Class1.cs" />
+    <Compile Include="SimpleRectangle.cs" />
     <Compile Include="Wall.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Program.cs" />

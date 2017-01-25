@@ -16,7 +16,7 @@ namespace SprintLevelEditor
     {
         const string MainGame = "game1";
 
-        int BLOCK_SIZE = 10;
+        public static int BLOCK_SIZE = 10;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
