@@ -19,7 +19,7 @@ namespace SprintLevelEditor
 
         public int BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
-        public int MOVE_SPEED = 3;
+        public int MOVE_SPEED = 10;
         public static int SCREEN_WIDTH = 800;
         public static int SCREEN_HEIGHT = 800;
 
@@ -121,7 +121,7 @@ namespace SprintLevelEditor
             }
 
             string json = JsonConvert.SerializeObject(simpleRectangles.ToArray(), Formatting.Indented);
-            int epoch = (int)((DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
+            int epoch = (int) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
             File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "level-" + epoch + ".json"), json);
         }
 
@@ -225,6 +225,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
 
                 BLOCK_SIZE--;
+                MOVE_SPEED = BLOCK_SIZE;
                 makeGrid();
             }
 
@@ -251,6 +252,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
 
                 BLOCK_SIZE++;
+                MOVE_SPEED = BLOCK_SIZE;
                 makeGrid();
             }
 
@@ -394,8 +396,9 @@ namespace SprintLevelEditor
             
             if (!isHoldingLeft)
             {
-                wall.sprite.position = new Vector2(-100, -100);
-                circle.position = new Vector2(mouseX, mouseY);
+                //wall.sprite.position = new Vector2(-100, -100);
+                //circle.position = new Vector2(mouseX, mouseY);
+                wall.sprite.position = new Vector2(mouseX - mouseX%BLOCK_SIZE, mouseY - mouseY%BLOCK_SIZE);
             }
             else
             {
@@ -407,9 +410,19 @@ namespace SprintLevelEditor
                     ? (int) (startingHeldMousePosition.X - width)
                     : (int) startingHeldMousePosition.X;
 
+                if (Mouse.GetState().Position.X < startingHeldMousePosition.X)
+                {
+                    width += BLOCK_SIZE;
+                }
+
                 int drawY = Mouse.GetState().Position.Y < startingHeldMousePosition.Y
                     ? (int) (startingHeldMousePosition.Y - height)
                     : (int) startingHeldMousePosition.Y;
+
+                if (Mouse.GetState().Position.Y < startingHeldMousePosition.Y)
+                {
+                    height += BLOCK_SIZE;
+                }
 
                 wall.sprite.drawRect = new Rectangle(drawX, drawY, (int) width, (int) height);
                 wall.sprite.position = new Vector2((startingHeldMousePosition.X + Mouse.GetState().Position.X) / 2, (startingHeldMousePosition.Y + Mouse.GetState().Position.Y) / 2);
@@ -431,7 +444,7 @@ namespace SprintLevelEditor
             {
                 world.Draw(oldWall.Draw);
             }
-            world.Draw(circle.Draw);
+            //world.Draw(circle.Draw);
             world.Draw(wall.Draw);
             world.EndDraw();
         }
