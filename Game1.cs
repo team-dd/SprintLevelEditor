@@ -25,6 +25,7 @@ namespace SprintLevelEditor
         Circle circle;
         Wall wall;
         List<Wall> oldWalls;
+        List<Wall> redoQueue;
         bool isHoldingLeft;
         bool isHoldingRight;
         Vector2 startingHeldMousePosition;
@@ -39,6 +40,7 @@ namespace SprintLevelEditor
             isHoldingRight = false;
             startingHeldMousePosition = Vector2.Zero;
             oldWalls = new List<Wall>();
+            redoQueue = new List<Wall>();
         }
 
         /// <summary>
@@ -92,6 +94,30 @@ namespace SprintLevelEditor
             File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "level-" + epoch + ".json"), json);
         }
 
+        public void undo()
+        {
+            if (oldWalls.Count == 0)
+            {
+                return;
+            }
+
+            Wall redoWall = oldWalls[oldWalls.Count - 1];
+            redoQueue.Add(redoWall);
+            oldWalls.RemoveAt(oldWalls.Count - 1);
+        }
+
+        public void redo()
+        {
+            if (redoQueue.Count == 0)
+            {
+                return;
+            }
+
+            Wall redoWall = redoQueue[redoQueue.Count - 1];
+            oldWalls.Add(redoWall);
+            redoQueue.RemoveAt(redoQueue.Count - 1);
+        }
+
         public void MainUpdate(GameTimeWrapper gameTime)
         {
             world.gameStates[MainGame].UpdateCurrentCamera(gameTime);
@@ -113,11 +139,23 @@ namespace SprintLevelEditor
                 oldWalls.Add(oldWall);
                 startingHeldMousePosition = Vector2.Zero;
                 wall.sprite.drawRect = new Rectangle(0, 0, BLOCK_SIZE, BLOCK_SIZE);
+
+                redoQueue = new List<Wall>();
             }
 
-            if (keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
             {
                 saveGame();
+            }
+
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.Z) && previousKeyboardState.IsKeyUp(Keys.Z))
+            {
+                undo();
+            }
+
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.Y) && previousKeyboardState.IsKeyUp(Keys.Y))
+            {
+                redo();
             }
 
             circle.Update(gameTime);
