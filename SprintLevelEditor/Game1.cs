@@ -22,7 +22,7 @@ namespace SprintLevelEditor
         public static int MAX_BLOCK_SIZE = 50;
         public static int MIN_BLOCK_SIZE = 3;
         public int MOVE_SPEED = 10;
-        public static int SCREEN_WIDTH = 1600;
+        public static int SCREEN_WIDTH = 1800;
         public static int SCREEN_HEIGHT = 1000;
 
         GraphicsDeviceManager graphics;
@@ -66,6 +66,7 @@ namespace SprintLevelEditor
             // TODO: Add your initialization logic here
             previousKeyboardState = Keyboard.GetState();
             previousMouseState = Mouse.GetState();
+            this.Window.Position = new Point(0, 0);
             base.Initialize();
         }
 
@@ -117,7 +118,7 @@ namespace SprintLevelEditor
         public void saveGame()
         {
             System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            saveFileDialog.Filter = "json files (*.json)|*.json";
+            saveFileDialog.Filter = ".json file (*.json)|*.json";
             saveFileDialog.FilterIndex = 2;
             saveFileDialog.RestoreDirectory = true;
             saveFileDialog.Title = "Save your level";
