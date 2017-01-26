@@ -248,7 +248,7 @@ namespace SprintLevelEditor
                 wall.sprite.position = new Vector2(mouseX - mouseX % BLOCK_SIZE, mouseY - mouseY % BLOCK_SIZE);
             }
 
-                if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
             {
                 saveGame();
             }
