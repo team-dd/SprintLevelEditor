@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using GLX;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -115,32 +116,46 @@ namespace SprintLevelEditor
 
         public void saveGame()
         {
-            List<SimpleRectangle> simpleRectangles = new List<SimpleRectangle>();
+            System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            saveFileDialog.Filter = "json files (*.json)|*.json";
+            saveFileDialog.FilterIndex = 2;
+            saveFileDialog.RestoreDirectory = true;
+            saveFileDialog.Title = "Save your level";
+            saveFileDialog.ShowDialog();
 
-            int xOffset = oldWalls[0].sprite.drawRect.X;
-            int yOffset = oldWalls[0].sprite.drawRect.Y;
-
-            foreach (Wall oldWall in oldWalls)
+            if (saveFileDialog.FileName != "")
             {
-                if (oldWall.sprite.drawRect.X < xOffset)
+                FileStream fs = (FileStream) saveFileDialog.OpenFile();
+                List<SimpleRectangle> simpleRectangles = new List<SimpleRectangle>();
+
+                int xOffset = oldWalls[0].sprite.drawRect.X;
+                int yOffset = oldWalls[0].sprite.drawRect.Y;
+
+                foreach (Wall oldWall in oldWalls)
                 {
-                    xOffset = oldWall.sprite.drawRect.X;
+                    if (oldWall.sprite.drawRect.X < xOffset)
+                    {
+                        xOffset = oldWall.sprite.drawRect.X;
+                    }
+
+                    if (oldWall.sprite.drawRect.Y < yOffset)
+                    {
+                        yOffset = oldWall.sprite.drawRect.Y;
+                    }
                 }
 
-                if (oldWall.sprite.drawRect.Y < yOffset)
+                foreach (Wall oldWall in oldWalls)
                 {
-                    yOffset = oldWall.sprite.drawRect.Y;
+                    simpleRectangles.Add(SimpleRectangle.fromWall(oldWall, BLOCK_SIZE, xOffset, yOffset));
                 }
-            }
 
-            foreach (Wall oldWall in oldWalls)
-            {
-                simpleRectangles.Add(SimpleRectangle.fromWall(oldWall, BLOCK_SIZE, xOffset, yOffset));
-            }
+                string json = JsonConvert.SerializeObject(simpleRectangles.ToArray(), Formatting.Indented);
+                int epoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+                byte[] jsonBytes = Encoding.ASCII.GetBytes(json);
 
-            string json = JsonConvert.SerializeObject(simpleRectangles.ToArray(), Formatting.Indented);
-            int epoch = (int) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-            File.WriteAllText(Path.Combine(Environment.CurrentDirectory, "level-" + epoch + ".json"), json);
+                fs.Write(jsonBytes, 0, jsonBytes.Length);
+                fs.Close();
+            }
         }
 
         public void undo()
