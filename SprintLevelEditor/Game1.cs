@@ -192,6 +192,9 @@ namespace SprintLevelEditor
         {
             world.UpdateCurrentCamera(gameTime);
             keyboardState = Keyboard.GetState();
+            MouseState mouseState = Mouse.GetState();
+            int mouseX = mouseState.Position.X;
+            int mouseY = mouseState.Position.Y;
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
@@ -199,6 +202,32 @@ namespace SprintLevelEditor
                 startingHeldMousePosition = Mouse.GetState().Position.ToVector2();
                 startingHeldMousePosition.X = startingHeldMousePosition.X - (startingHeldMousePosition.X % BLOCK_SIZE);
                 startingHeldMousePosition.Y = startingHeldMousePosition.Y - (startingHeldMousePosition.Y % BLOCK_SIZE);
+            }
+            else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && isHoldingLeft)
+            {
+                float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) - (Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) % BLOCK_SIZE));
+                float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) - (Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) % BLOCK_SIZE));
+
+                int drawX = Mouse.GetState().Position.X < startingHeldMousePosition.X
+                    ? (int)(startingHeldMousePosition.X - width)
+                    : (int)startingHeldMousePosition.X;
+
+                if (Mouse.GetState().Position.X < startingHeldMousePosition.X)
+                {
+                    width += BLOCK_SIZE;
+                }
+
+                int drawY = Mouse.GetState().Position.Y < startingHeldMousePosition.Y
+                    ? (int)(startingHeldMousePosition.Y - height)
+                    : (int)startingHeldMousePosition.Y;
+
+                if (Mouse.GetState().Position.Y < startingHeldMousePosition.Y)
+                {
+                    height += BLOCK_SIZE;
+                }
+
+                wall.sprite.position = new Vector2(drawX, drawY);
+                wall.sprite.DrawSize = new Size(width, height);
             }
             else if (Mouse.GetState().LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
             {
@@ -214,8 +243,12 @@ namespace SprintLevelEditor
 
                 redoQueue = new List<Wall>();
             }
+            else if (!isHoldingLeft)
+            {
+                wall.sprite.position = new Vector2(mouseX - mouseX % BLOCK_SIZE, mouseY - mouseY % BLOCK_SIZE);
+            }
 
-            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
+                if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
             {
                 saveGame();
             }
@@ -431,43 +464,6 @@ namespace SprintLevelEditor
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
-            MouseState mouseState = Mouse.GetState();
-            int mouseX = mouseState.Position.X;
-            int mouseY = mouseState.Position.Y;
-            
-            if (!isHoldingLeft)
-            {
-                wall.sprite.position = new Vector2(mouseX - mouseX%BLOCK_SIZE, mouseY - mouseY%BLOCK_SIZE);
-            }
-            else
-            {
-                circle.position = new Vector2(-100, -100);
-                float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) - (Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) % BLOCK_SIZE));
-                float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) - (Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) % BLOCK_SIZE));
-
-                int drawX = Mouse.GetState().Position.X < startingHeldMousePosition.X
-                    ? (int) (startingHeldMousePosition.X - width)
-                    : (int) startingHeldMousePosition.X;
-
-                if (Mouse.GetState().Position.X < startingHeldMousePosition.X)
-                {
-                    width += BLOCK_SIZE;
-                }
-
-                int drawY = Mouse.GetState().Position.Y < startingHeldMousePosition.Y
-                    ? (int) (startingHeldMousePosition.Y - height)
-                    : (int) startingHeldMousePosition.Y;
-
-                if (Mouse.GetState().Position.Y < startingHeldMousePosition.Y)
-                {
-                    height += BLOCK_SIZE;
-                }
-
-                wall.sprite.position = new Vector2((startingHeldMousePosition.X + Mouse.GetState().Position.X) / 2, (startingHeldMousePosition.Y + Mouse.GetState().Position.Y) / 2);
-                wall.sprite.DrawSize = new Size(width, height);
-            }
 
             world.DrawWorld();
 
