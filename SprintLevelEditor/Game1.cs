@@ -226,7 +226,7 @@ namespace SprintLevelEditor
                     height += BLOCK_SIZE;
                 }
 
-                wall.sprite.position = new Vector2(drawX, drawY);
+                wall.sprite.updatePosition(new Vector2(drawX, drawY));
                 wall.sprite.DrawSize = new Size(width, height);
             }
             else if (Mouse.GetState().LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
@@ -235,7 +235,7 @@ namespace SprintLevelEditor
 
                 Wall oldWall = new Wall(graphics);
                 oldWall.sprite.DrawSize = wall.sprite.DrawSize;
-                oldWall.sprite.position = new Vector2(wall.sprite.position.X, wall.sprite.position.Y);
+                oldWall.sprite.updatePosition(new Vector2(wall.sprite.position.X, wall.sprite.position.Y));
 
                 oldWalls.Add(oldWall);
                 startingHeldMousePosition = Vector2.Zero;
@@ -338,7 +338,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y - MOVE_SPEED);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y - MOVE_SPEED));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledOldWalls.Add(scaledOldWall);
                 }
@@ -348,7 +348,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in redoQueue)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y - MOVE_SPEED);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y - MOVE_SPEED));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledRedoQueue.Add(scaledOldWall);
                 }
@@ -361,7 +361,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y + MOVE_SPEED);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y + MOVE_SPEED));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledOldWalls.Add(scaledOldWall);
                 }
@@ -371,7 +371,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in redoQueue)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y + MOVE_SPEED);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y + MOVE_SPEED));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledRedoQueue.Add(scaledOldWall);
                 }
@@ -384,7 +384,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X + MOVE_SPEED, oldWall.sprite.position.Y);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X + MOVE_SPEED, oldWall.sprite.position.Y));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledOldWalls.Add(scaledOldWall);
                 }
@@ -394,7 +394,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in redoQueue)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X + MOVE_SPEED, oldWall.sprite.position.Y);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X + MOVE_SPEED, oldWall.sprite.position.Y));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledRedoQueue.Add(scaledOldWall);
                 }
@@ -407,7 +407,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X - MOVE_SPEED, oldWall.sprite.position.Y);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X - MOVE_SPEED, oldWall.sprite.position.Y));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledOldWalls.Add(scaledOldWall);
                 }
@@ -417,7 +417,7 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in redoQueue)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X - MOVE_SPEED, oldWall.sprite.position.Y);
+                    scaledOldWall.sprite.updatePosition(new Vector2(oldWall.sprite.position.X - MOVE_SPEED, oldWall.sprite.position.Y));
                     scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
                     scaledRedoQueue.Add(scaledOldWall);
                 }

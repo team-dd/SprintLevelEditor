@@ -25,7 +25,7 @@ namespace SprintLevelEditor
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            sprite.DrawRect(spriteBatch);
+            sprite.Draw(spriteBatch);
         }
     }
 }
