@@ -22,8 +22,8 @@ namespace SprintLevelEditor
         public static int MAX_BLOCK_SIZE = 50;
         public static int MIN_BLOCK_SIZE = 3;
         public int MOVE_SPEED = 10;
-        public static int SCREEN_WIDTH = 800;
-        public static int SCREEN_HEIGHT = 800;
+        public static int SCREEN_WIDTH = 1600;
+        public static int SCREEN_HEIGHT = 1000;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -97,7 +97,7 @@ namespace SprintLevelEditor
         {
             grid = new List<Line>();
             // grid
-            foreach (int i in Enumerable.Range(1, SCREEN_HEIGHT / BLOCK_SIZE))
+            foreach (int i in Enumerable.Range(1, SCREEN_WIDTH / BLOCK_SIZE))
             {
                 Vector2 start = new Vector2(i * BLOCK_SIZE, 0);
                 Vector2 end = new Vector2(i * BLOCK_SIZE, SCREEN_HEIGHT);
@@ -105,7 +105,7 @@ namespace SprintLevelEditor
                 grid.Add(line);
             }
 
-            foreach (int j in Enumerable.Range(1, SCREEN_WIDTH / BLOCK_SIZE))
+            foreach (int j in Enumerable.Range(1, SCREEN_HEIGHT / BLOCK_SIZE))
             {
                 Vector2 start = new Vector2(0, j * BLOCK_SIZE);
                 Vector2 end = new Vector2(SCREEN_WIDTH, j * BLOCK_SIZE);
@@ -274,8 +274,8 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
+                    scaledOldWall.sprite.updatePosition(new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1),
+                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1)));
                     scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1),
                         (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
                     scaledOldWalls.Add(scaledOldWall);
@@ -286,8 +286,8 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in redoQueue)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
+                    scaledOldWall.sprite.updatePosition(new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1),
+                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1)));
                     scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1),
                         (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
                     scaledRedoQueue.Add(scaledOldWall);
@@ -306,8 +306,8 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in oldWalls)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                    scaledOldWall.sprite.updatePosition(new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1),
+                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1)));
                     scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1),
                         (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
                     scaledOldWalls.Add(scaledOldWall);
@@ -318,8 +318,8 @@ namespace SprintLevelEditor
                 foreach (Wall oldWall in redoQueue)
                 {
                     Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                    scaledOldWall.sprite.updatePosition(new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1),
+                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1)));
                     scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1),
                         (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
                     scaledRedoQueue.Add(scaledOldWall);
