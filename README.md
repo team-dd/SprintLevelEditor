@@ -4,8 +4,9 @@ This is a WIP level editor being created for [Sprint/DoubleDash](https://github.
 
 ## Installation
 
-1. Install [Json.NET](http://www.newtonsoft.com/json) and a reference to it in the project
-2. Build and enjoy
+1. Install [Json.NET](http://www.newtonsoft.com/json)
+2. Install [GLX](https://github.com/golf1052/GLX)
+3. Build and enjoy
 
 ## Usage
 
