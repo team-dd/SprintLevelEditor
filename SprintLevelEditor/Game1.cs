@@ -128,19 +128,19 @@ namespace SprintLevelEditor
                 FileStream fs = (FileStream) saveFileDialog.OpenFile();
                 List<SimpleRectangle> simpleRectangles = new List<SimpleRectangle>();
 
-                int xOffset = oldWalls[0].sprite.drawRect.X;
-                int yOffset = oldWalls[0].sprite.drawRect.Y;
+                int xOffset = (int)oldWalls[0].sprite.position.X;
+                int yOffset = (int)oldWalls[0].sprite.position.Y;
 
                 foreach (Wall oldWall in oldWalls)
                 {
-                    if (oldWall.sprite.drawRect.X < xOffset)
+                    if (oldWall.sprite.position.X < xOffset)
                     {
-                        xOffset = oldWall.sprite.drawRect.X;
+                        xOffset = (int)oldWall.sprite.position.X;
                     }
 
-                    if (oldWall.sprite.drawRect.Y < yOffset)
+                    if (oldWall.sprite.position.Y < yOffset)
                     {
-                        yOffset = oldWall.sprite.drawRect.Y;
+                        yOffset = (int)oldWall.sprite.position.Y;
                     }
                 }
 
