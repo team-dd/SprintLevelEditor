@@ -40,6 +40,12 @@ namespace SprintLevelEditor
         KeyboardState keyboardState;
         KeyboardState previousKeyboardState;
         MouseState previousMouseState;
+        bool isGridOn;
+        Camera mainCamera;
+        Camera minimapCamera;
+        VirtualResolutionRenderer minimapVirtualResolutionRenderer;
+        Viewport defaultViewport;
+        Viewport minimapViewport;
 
         public Game1()
         {
@@ -66,6 +72,7 @@ namespace SprintLevelEditor
             // TODO: Add your initialization logic here
             previousKeyboardState = Keyboard.GetState();
             previousMouseState = Mouse.GetState();
+            isGridOn = true;
             this.Window.Position = new Point(0, 0);
             base.Initialize();
         }
@@ -90,6 +97,22 @@ namespace SprintLevelEditor
 
             wall = new Wall(graphics);
             wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
+
+            defaultViewport = graphics.GraphicsDevice.Viewport;
+            minimapViewport = defaultViewport;
+            minimapViewport.Width = defaultViewport.Width / 20;
+            minimapViewport.Height = minimapViewport.Height / 20;
+
+            mainCamera = new Camera(world.virtualResolutionRenderer, Camera.CameraFocus.Center);
+            world.AddCamera("mainCamera", mainCamera);
+
+            minimapVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH / 20, SCREEN_HEIGHT / 20));
+            minimapVirtualResolutionRenderer.BackgroundColor = Color.Transparent;
+            minimapCamera = new Camera(minimapVirtualResolutionRenderer, Camera.CameraFocus.Center);
+            minimapCamera.Zoom = .125f;
+            world.AddCamera("minimap", minimapCamera);
+
+            world.CurrentCameraName = "mainCamera";
 
             makeGrid();
         }
@@ -192,6 +215,9 @@ namespace SprintLevelEditor
         public void MainUpdate(GameTimeWrapper gameTime)
         {
             world.UpdateCurrentCamera(gameTime);
+            world.CurrentCameraName = "minimap";
+            world.UpdateCurrentCamera(gameTime);
+            world.CurrentCameraName = "mainCamera";
             keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();
             int mouseX = mouseState.Position.X;
@@ -302,7 +328,10 @@ namespace SprintLevelEditor
                 BLOCK_SIZE--;
                 MOVE_SPEED = BLOCK_SIZE;
                 wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-                makeGrid();
+                if (isGridOn)
+                {
+                    makeGrid();
+                }
             }
 
             if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE < MAX_BLOCK_SIZE && !isHoldingLeft)
@@ -336,7 +365,10 @@ namespace SprintLevelEditor
                 BLOCK_SIZE++;
                 MOVE_SPEED = BLOCK_SIZE;
                 wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-                makeGrid();
+                if (isGridOn)
+                {
+                    makeGrid();
+                }
             }
 
             if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
@@ -439,6 +471,20 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
             }
 
+            if (keyboardState.IsKeyDown(Keys.G) && previousKeyboardState.IsKeyUp(Keys.G)) 
+            {
+                if (isGridOn)
+                {
+                    grid = new List<Line>();
+                    isGridOn = false;
+                }
+                else
+                {
+                    makeGrid();
+                    isGridOn = true;
+                }
+            }
+
             circle.Update(gameTime);
             wall.Update(gameTime);
 
@@ -478,7 +524,10 @@ namespace SprintLevelEditor
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            graphics.GraphicsDevice.Viewport = defaultViewport;
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            graphics.GraphicsDevice.Viewport = minimapViewport;
+            GraphicsDevice.Clear(Color.Transparent);
 
             world.DrawWorld();
 
@@ -487,6 +536,8 @@ namespace SprintLevelEditor
 
         public void MainDraw()
         {
+            graphics.GraphicsDevice.Viewport = defaultViewport;
+            world.CurrentCameraName = "mainCamera";
             world.BeginDraw();
             foreach (Line line in grid)
             {
@@ -496,8 +547,19 @@ namespace SprintLevelEditor
             {
                 world.Draw(oldWall.Draw);
             }
-            //world.Draw(circle.Draw);
             world.Draw(wall.Draw);
+            world.EndDraw();
+            world.CurrentCameraName = "minimap";
+            graphics.GraphicsDevice.Viewport = minimapViewport;
+            world.BeginDraw();
+            foreach (Line line in grid)
+            {
+                world.Draw(line.Draw);
+            }
+            foreach (Wall oldWall in oldWalls)
+            {
+                world.Draw(oldWall.Draw);
+            }
             world.EndDraw();
         }
     }
