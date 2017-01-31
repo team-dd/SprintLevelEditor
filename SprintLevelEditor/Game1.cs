@@ -44,8 +44,7 @@ namespace SprintLevelEditor
         Camera mainCamera;
         Camera minimapCamera;
         VirtualResolutionRenderer minimapVirtualResolutionRenderer;
-        Viewport defaultViewport;
-        Viewport minimapViewport;
+        Wall minimapBackground;
 
         public Game1()
         {
@@ -97,19 +96,17 @@ namespace SprintLevelEditor
 
             wall = new Wall(graphics);
             wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-
-            defaultViewport = graphics.GraphicsDevice.Viewport;
-            minimapViewport = defaultViewport;
-            minimapViewport.Width = defaultViewport.Width / 20;
-            minimapViewport.Height = minimapViewport.Height / 20;
+            minimapBackground = new Wall(graphics);
+            minimapBackground.sprite.color = Color.Black;
+            minimapBackground.sprite.DrawSize = new Size(99999, 99999);
 
             mainCamera = new Camera(world.virtualResolutionRenderer, Camera.CameraFocus.Center);
             world.AddCamera("mainCamera", mainCamera);
 
-            minimapVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH / 20, SCREEN_HEIGHT / 20));
-            minimapVirtualResolutionRenderer.BackgroundColor = Color.Transparent;
-            minimapCamera = new Camera(minimapVirtualResolutionRenderer, Camera.CameraFocus.Center);
-            minimapCamera.Zoom = .125f;
+            minimapVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH, SCREEN_HEIGHT), new Size(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10));
+            minimapVirtualResolutionRenderer.BackgroundColor = Color.Black;
+            minimapCamera = new Camera(minimapVirtualResolutionRenderer, Camera.CameraFocus.TopLeft);
+            minimapCamera.Zoom = .05f;
             world.AddCamera("minimap", minimapCamera);
 
             world.CurrentCameraName = "mainCamera";
@@ -524,10 +521,7 @@ namespace SprintLevelEditor
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            graphics.GraphicsDevice.Viewport = defaultViewport;
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            graphics.GraphicsDevice.Viewport = minimapViewport;
-            GraphicsDevice.Clear(Color.Transparent);
 
             world.DrawWorld();
 
@@ -536,7 +530,6 @@ namespace SprintLevelEditor
 
         public void MainDraw()
         {
-            graphics.GraphicsDevice.Viewport = defaultViewport;
             world.CurrentCameraName = "mainCamera";
             world.BeginDraw();
             foreach (Line line in grid)
@@ -550,12 +543,12 @@ namespace SprintLevelEditor
             world.Draw(wall.Draw);
             world.EndDraw();
             world.CurrentCameraName = "minimap";
-            graphics.GraphicsDevice.Viewport = minimapViewport;
             world.BeginDraw();
-            foreach (Line line in grid)
+            world.Draw(minimapBackground.Draw);
+            /*foreach (Line line in grid)
             {
                 world.Draw(line.Draw);
-            }
+            }*/
             foreach (Wall oldWall in oldWalls)
             {
                 world.Draw(oldWall.Draw);
