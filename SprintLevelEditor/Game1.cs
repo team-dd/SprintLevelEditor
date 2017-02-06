@@ -31,9 +31,10 @@ namespace SprintLevelEditor
         World world;
         Circle circle;
         Wall wall;
+        Wall cursorOutline;
         List<Wall> oldWalls;
         List<Wall> redoQueue;
-        List<Line> grid;
+        Grid grid;
         bool isHoldingLeft;
         bool isHoldingRight;
         Vector2 startingHeldMousePosition;
@@ -45,6 +46,12 @@ namespace SprintLevelEditor
         Camera minimapCamera;
         VirtualResolutionRenderer minimapVirtualResolutionRenderer;
         Wall minimapBackground;
+        Wall hoveredOutline;
+        bool isBlockSelected;
+        bool isHoveringOverABlock;
+        Wall hoveredBlock;
+        Wall selectedBlock;
+        Wall selectedOutline;
 
         public Game1()
         {
@@ -57,7 +64,8 @@ namespace SprintLevelEditor
             startingHeldMousePosition = Vector2.Zero;
             oldWalls = new List<Wall>();
             redoQueue = new List<Wall>();
-            grid = new List<Line>();
+            isBlockSelected = false;
+            isHoveringOverABlock = false;
         }
 
         /// <summary>
@@ -88,17 +96,26 @@ namespace SprintLevelEditor
             world.virtualResolutionRenderer.VirtualResolution = new Vector2(SCREEN_WIDTH, SCREEN_HEIGHT);
             circle = new Circle(Content.Load<Texture2D>("circle"));
 
+            grid = new Grid(graphics, SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
+
             mainGameTime = new GameTimeWrapper(MainUpdate, this, 1);
             world.AddGameState(MainGame, graphics);
             world.gameStates[MainGame].AddTime(mainGameTime);
             world.gameStates[MainGame].AddDraw(MainDraw);
             world.ActivateGameState(MainGame);
 
+            hoveredBlock = new Wall(graphics);
+            selectedBlock = new Wall(graphics);
+
             wall = new Wall(graphics);
             wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
             minimapBackground = new Wall(graphics);
             minimapBackground.sprite.color = Color.Black;
             minimapBackground.sprite.DrawSize = new Size(99999, 99999);
+            hoveredOutline = new Wall(graphics);
+            selectedOutline = new Wall(graphics);
+            cursorOutline = new Wall(graphics);
+            cursorOutline.sprite.color = Color.Red;
 
             mainCamera = new Camera(world.virtualResolutionRenderer, Camera.CameraFocus.Center);
             world.AddCamera("mainCamera", mainCamera);
@@ -110,29 +127,7 @@ namespace SprintLevelEditor
             world.AddCamera("minimap", minimapCamera);
 
             world.CurrentCameraName = "mainCamera";
-
-            makeGrid();
-        }
-
-        public void makeGrid()
-        {
-            grid = new List<Line>();
-            // grid
-            foreach (int i in Enumerable.Range(1, SCREEN_WIDTH / BLOCK_SIZE))
-            {
-                Vector2 start = new Vector2(i * BLOCK_SIZE, 0);
-                Vector2 end = new Vector2(i * BLOCK_SIZE, SCREEN_HEIGHT);
-                Line line = new Line(graphics, Line.Type.Point, start, end, 1);
-                grid.Add(line);
-            }
-
-            foreach (int j in Enumerable.Range(1, SCREEN_HEIGHT / BLOCK_SIZE))
-            {
-                Vector2 start = new Vector2(0, j * BLOCK_SIZE);
-                Vector2 end = new Vector2(SCREEN_WIDTH, j * BLOCK_SIZE);
-                Line line = new Line(graphics, Line.Type.Point, start, end, 1);
-                grid.Add(line);
-            }
+            //grid.Pan(SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
         }
 
         public void saveGame()
@@ -209,43 +204,64 @@ namespace SprintLevelEditor
             redoQueue = new List<Wall>();
         }
 
+        public bool isHoveringOverBlock(Wall block)
+        {
+            MouseState mouseState = Mouse.GetState();
+            return (block.sprite.rectangle.Contains(mouseState.X + world.CurrentCamera.Pan.X, mouseState.Y + world.CurrentCamera.Pan.Y));
+        }
+
         public void MainUpdate(GameTimeWrapper gameTime)
         {
-            world.UpdateCurrentCamera(gameTime);
-            world.CurrentCameraName = "minimap";
-            world.UpdateCurrentCamera(gameTime);
-            world.CurrentCameraName = "mainCamera";
             keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();
             int mouseX = mouseState.Position.X;
             int mouseY = mouseState.Position.Y;
 
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
+            if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
-                isHoldingLeft = true;
-                startingHeldMousePosition = Mouse.GetState().Position.ToVector2();
-                startingHeldMousePosition.X = startingHeldMousePosition.X - (startingHeldMousePosition.X % BLOCK_SIZE);
-                startingHeldMousePosition.Y = startingHeldMousePosition.Y - (startingHeldMousePosition.Y % BLOCK_SIZE);
+                if (isHoveringOverABlock)
+                {
+                    if (hoveredBlock == selectedBlock)
+                    {
+                        selectedBlock = new Wall(graphics);
+                    }
+                    else
+                    {
+                        selectedBlock = hoveredBlock;
+                        selectedOutline = new Wall(graphics);
+                        selectedOutline.sprite.color = Color.DarkRed;
+                        selectedOutline.sprite.position = new Vector2(hoveredOutline.sprite.position.X - 1, hoveredOutline.sprite.position.Y - 1);
+                        selectedOutline.sprite.DrawSize = new Size(hoveredOutline.sprite.DrawSize.Width + 2, hoveredOutline.sprite.DrawSize.Height + 2);
+                        selectedOutline.Update(gameTime);
+                    }
+                }
+                else
+                {
+                    isHoldingLeft = true;
+                    startingHeldMousePosition = Mouse.GetState().Position.ToVector2();
+                    startingHeldMousePosition.X = (world.CurrentCamera.Pan.X + startingHeldMousePosition.X) - ((world.CurrentCamera.Pan.X + startingHeldMousePosition.X) % BLOCK_SIZE);
+                    startingHeldMousePosition.Y = (world.CurrentCamera.Pan.Y + startingHeldMousePosition.Y)  - ((world.CurrentCamera.Pan.Y + startingHeldMousePosition.Y) % BLOCK_SIZE);
+                }
             }
-            else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && isHoldingLeft)
+            else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && isHoldingLeft && !isHoveringOverABlock)
             {
                 float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) - (Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) % BLOCK_SIZE));
                 float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) - (Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) % BLOCK_SIZE));
 
-                int drawX = Mouse.GetState().Position.X < startingHeldMousePosition.X
+                int drawX = mouseState.Position.X + world.CurrentCamera.Pan.X < startingHeldMousePosition.X
                     ? (int)(startingHeldMousePosition.X - width)
                     : (int)startingHeldMousePosition.X;
 
-                if (Mouse.GetState().Position.X < startingHeldMousePosition.X)
+                if (mouseState.Position.X + world.CurrentCamera.Pan.X  < startingHeldMousePosition.X)
                 {
                     width += BLOCK_SIZE;
                 }
 
-                int drawY = Mouse.GetState().Position.Y < startingHeldMousePosition.Y
+                int drawY = mouseState.Position.Y + world.CurrentCamera.Pan.Y < startingHeldMousePosition.Y
                     ? (int)(startingHeldMousePosition.Y - height)
                     : (int)startingHeldMousePosition.Y;
 
-                if (Mouse.GetState().Position.Y < startingHeldMousePosition.Y)
+                if (mouseState.Position.Y + world.CurrentCamera.Pan.Y < startingHeldMousePosition.Y)
                 {
                     height += BLOCK_SIZE;
                 }
@@ -254,7 +270,7 @@ namespace SprintLevelEditor
                 wall.sprite.DrawSize = new Size(width, height);
                 wall.sprite.Update(gameTime);
             }
-            else if (Mouse.GetState().LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
+            else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
             {
                 isHoldingLeft = false;
 
@@ -268,10 +284,6 @@ namespace SprintLevelEditor
                 wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
 
                 redoQueue = new List<Wall>();
-            }
-            else if (!isHoldingLeft)
-            {
-                wall.sprite.position = new Vector2(mouseX - mouseX % BLOCK_SIZE, mouseY - mouseY % BLOCK_SIZE);
             }
 
             if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
@@ -296,197 +308,106 @@ namespace SprintLevelEditor
 
             if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE > MIN_BLOCK_SIZE && !isHoldingLeft)
             {
-                List<Wall> scaledOldWalls = new List<Wall>();
-                foreach (Wall oldWall in oldWalls)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
-                    scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1),
-                        (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledOldWalls.Add(scaledOldWall);
-                }
-                oldWalls = scaledOldWalls;
-
-                List<Wall> scaledRedoQueue = new List<Wall>();
-                foreach (Wall oldWall in redoQueue)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE - 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE - 1));
-                    scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE - 1),
-                        (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE - 1));
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledRedoQueue.Add(scaledOldWall);
-                }
-                redoQueue = scaledRedoQueue;
-
                 BLOCK_SIZE--;
-                MOVE_SPEED = BLOCK_SIZE;
                 wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-                if (isGridOn)
-                {
-                    makeGrid();
-                }
+                world.CurrentCameraName = "mainCamera";
+                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom - .1f;
+                grid.resetGrid(world.CurrentCamera.Zoom);
             }
 
             if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE < MAX_BLOCK_SIZE && !isHoldingLeft)
             {
-                List<Wall> scaledOldWalls = new List<Wall>();
-                foreach (Wall oldWall in oldWalls)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-                    scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1),
-                        (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledOldWalls.Add(scaledOldWall);
-                }
-                oldWalls = scaledOldWalls;
-
-                List<Wall> scaledRedoQueue = new List<Wall>();
-                foreach (Wall oldWall in redoQueue)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2((oldWall.sprite.position.X / BLOCK_SIZE) * (BLOCK_SIZE + 1),
-                        (oldWall.sprite.position.Y / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-                    scaledOldWall.sprite.DrawSize = new Size((oldWall.sprite.DrawSize.Width / BLOCK_SIZE) * (BLOCK_SIZE + 1),
-                        (oldWall.sprite.DrawSize.Height / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledRedoQueue.Add(scaledOldWall);
-                }
-                redoQueue = scaledRedoQueue;
-
                 BLOCK_SIZE++;
-                MOVE_SPEED = BLOCK_SIZE;
                 wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-                if (isGridOn)
-                {
-                    makeGrid();
-                }
+                world.CurrentCameraName = "mainCamera";
+                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom + .1f;
+                grid.resetGrid(world.CurrentCamera.Zoom);
             }
 
             if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
             {
-                List<Wall> scaledOldWalls = new List<Wall>();
-                foreach (Wall oldWall in oldWalls)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y - MOVE_SPEED);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledOldWalls.Add(scaledOldWall);
-                }
-                oldWalls = scaledOldWalls;
-
-                List<Wall> scaledRedoQueue = new List<Wall>();
-                foreach (Wall oldWall in redoQueue)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y - MOVE_SPEED);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledRedoQueue.Add(scaledOldWall);
-                }
-                redoQueue = scaledRedoQueue;
-            }
+                world.CurrentCameraName = "mainCamera";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + BLOCK_SIZE);
+                world.CurrentCameraName = "minimap";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + BLOCK_SIZE);
+                grid.Pan(0, BLOCK_SIZE);
+            }   
 
             if (keyboardState.IsKeyDown(Keys.Up) && !isHoldingLeft)
             {
-                List<Wall> scaledOldWalls = new List<Wall>();
-                foreach (Wall oldWall in oldWalls)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y + MOVE_SPEED);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledOldWalls.Add(scaledOldWall);
-                }
-                oldWalls = scaledOldWalls;
-
-                List<Wall> scaledRedoQueue = new List<Wall>();
-                foreach (Wall oldWall in redoQueue)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X, oldWall.sprite.position.Y + MOVE_SPEED);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledRedoQueue.Add(scaledOldWall);
-                }
-                redoQueue = scaledRedoQueue;
+                world.CurrentCameraName = "mainCamera";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - BLOCK_SIZE);
+                world.CurrentCameraName = "minimap";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - BLOCK_SIZE);
+                grid.Pan(0, -BLOCK_SIZE);
             }
 
             if (keyboardState.IsKeyDown(Keys.Left) && !isHoldingLeft)
             {
-                List<Wall> scaledOldWalls = new List<Wall>();
-                foreach (Wall oldWall in oldWalls)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X + MOVE_SPEED, oldWall.sprite.position.Y);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledOldWalls.Add(scaledOldWall);
-                }
-                oldWalls = scaledOldWalls;
-
-                List<Wall> scaledRedoQueue = new List<Wall>();
-                foreach (Wall oldWall in redoQueue)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X + MOVE_SPEED, oldWall.sprite.position.Y);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledRedoQueue.Add(scaledOldWall);
-                }
-                redoQueue = scaledRedoQueue;
+                world.CurrentCameraName = "mainCamera";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - BLOCK_SIZE, world.CurrentCamera.Pan.Y);
+                world.CurrentCameraName = "minimap";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - BLOCK_SIZE, world.CurrentCamera.Pan.Y);
+                grid.Pan(-BLOCK_SIZE, 0);
             }
 
             if (keyboardState.IsKeyDown(Keys.Right) && !isHoldingLeft)
             {
-                List<Wall> scaledOldWalls = new List<Wall>();
-                foreach (Wall oldWall in oldWalls)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X - MOVE_SPEED, oldWall.sprite.position.Y);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledOldWalls.Add(scaledOldWall);
-                }
-                oldWalls = scaledOldWalls;
-
-                List<Wall> scaledRedoQueue = new List<Wall>();
-                foreach (Wall oldWall in redoQueue)
-                {
-                    Wall scaledOldWall = new Wall(graphics);
-                    scaledOldWall.sprite.position = new Vector2(oldWall.sprite.position.X - MOVE_SPEED, oldWall.sprite.position.Y);
-                    scaledOldWall.sprite.DrawSize = oldWall.sprite.DrawSize;
-                    scaledOldWall.sprite.Update(gameTime);
-                    scaledRedoQueue.Add(scaledOldWall);
-                }
-                redoQueue = scaledRedoQueue;
+                world.CurrentCameraName = "mainCamera";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + BLOCK_SIZE, world.CurrentCamera.Pan.Y);
+                world.CurrentCameraName = "minimap";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + BLOCK_SIZE, world.CurrentCamera.Pan.Y);
+                grid.Pan(BLOCK_SIZE, 0);
             }
 
             if (keyboardState.IsKeyDown(Keys.G) && previousKeyboardState.IsKeyUp(Keys.G)) 
             {
                 if (isGridOn)
                 {
-                    grid = new List<Line>();
-                    isGridOn = false;
+                    grid.Hide();
                 }
                 else
                 {
-                    makeGrid();
-                    isGridOn = true;
+                    grid.Show();
                 }
             }
 
             circle.Update(gameTime);
             wall.Update(gameTime);
 
+            wall.sprite.position = new Vector2((mouseX + world.CurrentCamera.Pan.X) - (mouseX + world.CurrentCamera.Pan.X) % BLOCK_SIZE, (mouseY + world.CurrentCamera.Pan.Y) - (mouseY + world.CurrentCamera.Pan.Y) % BLOCK_SIZE);
+
+            cursorOutline.sprite.color = Color.Red;
+            cursorOutline.sprite.position = new Vector2(wall.sprite.position.X - 1, wall.sprite.position.Y - 1);
+            cursorOutline.sprite.DrawSize = new Size(wall.sprite.DrawSize.Width + 2, wall.sprite.DrawSize.Height + 2);
+            cursorOutline.Update(gameTime);
+
+            hoveredOutline.sprite.DrawSize = new Size(0, 0);
+            isHoveringOverABlock = false;
+            hoveredBlock = new Wall(graphics);
+            List<Wall> reversedWalls = oldWalls;
+            reversedWalls.Reverse();
+            foreach (Wall oldWall in reversedWalls)
+            {
+                if (isHoveringOverBlock(oldWall) && !isHoldingLeft)
+                {
+                    isHoveringOverABlock = true;
+                    hoveredBlock = oldWall;
+                    hoveredOutline.sprite.color = Color.Red;
+                    hoveredOutline.sprite.position = new Vector2(oldWall.sprite.position.X - 1, oldWall.sprite.position.Y - 1);
+                    hoveredOutline.sprite.DrawSize = new Size(oldWall.sprite.DrawSize.Width + 2, oldWall.sprite.DrawSize.Height + 2);                 
+                }
+            }
+
+            hoveredOutline.Update(gameTime);
+
             previousKeyboardState = keyboardState;
-            previousMouseState = Mouse.GetState();
+            previousMouseState = mouseState;
+
+            world.UpdateCurrentCamera(gameTime);
+            world.CurrentCameraName = "minimap";
+            world.UpdateCurrentCamera(gameTime);
+            world.CurrentCameraName = "mainCamera";
 
             base.Update(gameTime);
         }
@@ -532,23 +453,26 @@ namespace SprintLevelEditor
         {
             world.CurrentCameraName = "mainCamera";
             world.BeginDraw();
-            foreach (Line line in grid)
-            {
-                world.Draw(line.Draw);
-            }
+            world.Draw(grid.Draw);
             foreach (Wall oldWall in oldWalls)
             {
                 world.Draw(oldWall.Draw);
             }
+            world.Draw(hoveredOutline.Draw);
+            world.Draw(hoveredBlock.Draw);
+            world.Draw(selectedOutline.Draw);
+            world.Draw(selectedBlock.Draw);
+            world.Draw(cursorOutline.Draw);
             world.Draw(wall.Draw);
             world.EndDraw();
+            DrawMinimap();
+        }
+
+        public void DrawMinimap()
+        {
             world.CurrentCameraName = "minimap";
             world.BeginDraw();
             world.Draw(minimapBackground.Draw);
-            /*foreach (Line line in grid)
-            {
-                world.Draw(line.Draw);
-            }*/
             foreach (Wall oldWall in oldWalls)
             {
                 world.Draw(oldWall.Draw);
