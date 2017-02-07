@@ -334,6 +334,7 @@ namespace SprintLevelEditor
                 world.CurrentCameraName = "minimap";
                 world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + 10);
                 grid.Pan(0, 1);
+                world.CurrentCameraName = "camera1";
             }   
 
             if (keyboardState.IsKeyDown(Keys.Up) && !isHoldingLeft)
@@ -343,6 +344,7 @@ namespace SprintLevelEditor
                 world.CurrentCameraName = "minimap";
                 world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - 10);
                 grid.Pan(0, -1);
+                world.CurrentCameraName = "camera1";
             }
 
             if (keyboardState.IsKeyDown(Keys.Left) && !isHoldingLeft)
@@ -352,6 +354,7 @@ namespace SprintLevelEditor
                 world.CurrentCameraName = "minimap";
                 world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - 10, world.CurrentCamera.Pan.Y);
                 grid.Pan(-1, 0);
+                world.CurrentCameraName = "camera1";
             }
 
             if (keyboardState.IsKeyDown(Keys.Right) && !isHoldingLeft)
@@ -361,6 +364,7 @@ namespace SprintLevelEditor
                 world.CurrentCameraName = "minimap";
                 world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + 10, world.CurrentCamera.Pan.Y);
                 grid.Pan(1, 0);
+                world.CurrentCameraName = "camera1";
             }
 
             if (keyboardState.IsKeyDown(Keys.G) && previousKeyboardState.IsKeyUp(Keys.G)) 
