@@ -17,9 +17,9 @@ namespace SprintLevelEditor
         public bool isShowing;
         private int screenWidth;
         private int screenHeight;
-        private int blockSize;
+        private float blockSize;
 
-        public Grid(GraphicsDeviceManager graphics, int width, int height, int blockSize)
+        public Grid(GraphicsDeviceManager graphics, int width, int height, float blockSize)
         {
             this.graphics = graphics;
             isShowing = true;
@@ -35,20 +35,20 @@ namespace SprintLevelEditor
             verticalLines = new List<Line>();
             horizontalLines = new List<Line>();
             float updatedScreenWidth = screenWidth * zoom;
-            float updatedscreenHeight = screenHeight * zoom;
+            float updatedScreenHeight = screenHeight * zoom;
 
-            foreach (int i in Enumerable.Range(1, (int) (screenWidth / blockSize)))
+            foreach (int i in Enumerable.Range(1, (int) (updatedScreenWidth * 10 / blockSize)))
             {
-                Vector2 start = new Vector2(i * blockSize, 0);
-                Vector2 end = new Vector2(i * blockSize, screenHeight);
+                Vector2 start = new Vector2((i * blockSize) - (updatedScreenWidth * 5), updatedScreenHeight * -10);
+                Vector2 end = new Vector2((i * blockSize) - (updatedScreenWidth * 5), updatedScreenHeight * 10);
                 Line line = new Line(graphics, Line.Type.Point, start, end, 1);
                 verticalLines.Add(line);
             }
 
-            foreach (int j in Enumerable.Range(1, (int) (screenHeight / blockSize)))
+            foreach (int j in Enumerable.Range(1, (int) (updatedScreenHeight * 10 / blockSize)))
             {
-                Vector2 start = new Vector2(0, j * blockSize);
-                Vector2 end = new Vector2(screenWidth, j * blockSize);
+                Vector2 start = new Vector2(updatedScreenWidth * -10, (j * blockSize) - (updatedScreenHeight * 5));
+                Vector2 end = new Vector2(updatedScreenWidth * 10, (j * blockSize) - (updatedScreenHeight * 5));
                 Line line = new Line(graphics, Line.Type.Point, start, end, 1);
                 horizontalLines.Add(line);
             }
@@ -83,9 +83,9 @@ namespace SprintLevelEditor
             }
         }
 
-        public void Zoom(float zoom)
+        public void Zoom(float zoom, int blockSize)
         {
-            resetGrid(zoom);
+           // resetGrid(zoom);
         }
 
         public void Draw(SpriteBatch spriteBatch)

@@ -18,7 +18,7 @@ namespace SprintLevelEditor
     {
         const string MainGame = "game1";
 
-        public int BLOCK_SIZE = 10;
+        public float BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
         public static int MIN_BLOCK_SIZE = 3;
         public int MOVE_SPEED = 10;
@@ -109,6 +109,7 @@ namespace SprintLevelEditor
 
             wall = new Wall(graphics);
             wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
+            wall.sprite.position = new Vector2(10, 10);
             minimapBackground = new Wall(graphics);
             minimapBackground.sprite.color = Color.Black;
             minimapBackground.sprite.DrawSize = new Size(99999, 99999);
@@ -117,16 +118,15 @@ namespace SprintLevelEditor
             cursorOutline = new Wall(graphics);
             cursorOutline.sprite.color = Color.Red;
 
-            mainCamera = new Camera(world.virtualResolutionRenderer, Camera.CameraFocus.Center);
-            world.AddCamera("mainCamera", mainCamera);
-
             minimapVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH, SCREEN_HEIGHT), new Size(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10));
             minimapVirtualResolutionRenderer.BackgroundColor = Color.Black;
             minimapCamera = new Camera(minimapVirtualResolutionRenderer, Camera.CameraFocus.TopLeft);
             minimapCamera.Zoom = .05f;
             world.AddCamera("minimap", minimapCamera);
 
-            world.CurrentCameraName = "mainCamera";
+            world.CurrentCameraName = "camera1";
+            world.CurrentCamera.Focus = Camera.CameraFocus.Center;
+            world.CurrentCamera.Zoom = 10f;
             //grid.Pan(SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
         }
 
@@ -207,15 +207,18 @@ namespace SprintLevelEditor
         public bool isHoveringOverBlock(Wall block)
         {
             MouseState mouseState = Mouse.GetState();
-            return (block.sprite.rectangle.Contains(mouseState.X + world.CurrentCamera.Pan.X, mouseState.Y + world.CurrentCamera.Pan.Y));
+            Vector2 mousePosition = world.CurrentCamera.MouseToScreenCoords(Mouse.GetState().Position);
+            return (block.sprite.rectangle.Contains(mousePosition.X, mousePosition.Y));
         }
 
         public void MainUpdate(GameTimeWrapper gameTime)
         {
+            world.CurrentCameraName = "camera1";
             keyboardState = Keyboard.GetState();
             MouseState mouseState = Mouse.GetState();
-            int mouseX = mouseState.Position.X;
-            int mouseY = mouseState.Position.Y;
+            Vector2 mousePosition = world.CurrentCamera.MouseToScreenCoords(Mouse.GetState().Position);
+            float mouseX = mousePosition.X;
+            float mouseY = mousePosition.Y;
 
             if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
@@ -238,37 +241,37 @@ namespace SprintLevelEditor
                 else
                 {
                     isHoldingLeft = true;
-                    startingHeldMousePosition = Mouse.GetState().Position.ToVector2();
-                    startingHeldMousePosition.X = (world.CurrentCamera.Pan.X + startingHeldMousePosition.X) - ((world.CurrentCamera.Pan.X + startingHeldMousePosition.X) % BLOCK_SIZE);
-                    startingHeldMousePosition.Y = (world.CurrentCamera.Pan.Y + startingHeldMousePosition.Y)  - ((world.CurrentCamera.Pan.Y + startingHeldMousePosition.Y) % BLOCK_SIZE);
+                    startingHeldMousePosition = new Vector2();
+                    startingHeldMousePosition.X = mouseX - (mouseX % BLOCK_SIZE);
+                    startingHeldMousePosition.Y = mouseY - (mouseY % BLOCK_SIZE);
                 }
             }
             else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && isHoldingLeft && !isHoveringOverABlock)
             {
-                float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) - (Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) % BLOCK_SIZE));
-                float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) - (Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) % BLOCK_SIZE));
+                float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - mouseX) - (Math.Abs(startingHeldMousePosition.X - mouseX) % BLOCK_SIZE));
+                float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - mouseY) - (Math.Abs(startingHeldMousePosition.Y - mouseY) % BLOCK_SIZE));
 
-                int drawX = mouseState.Position.X + world.CurrentCamera.Pan.X < startingHeldMousePosition.X
+                int drawX = mouseX < startingHeldMousePosition.X
                     ? (int)(startingHeldMousePosition.X - width)
                     : (int)startingHeldMousePosition.X;
 
-                if (mouseState.Position.X + world.CurrentCamera.Pan.X  < startingHeldMousePosition.X)
+                if (mouseX < startingHeldMousePosition.X)
                 {
                     width += BLOCK_SIZE;
                 }
 
-                int drawY = mouseState.Position.Y + world.CurrentCamera.Pan.Y < startingHeldMousePosition.Y
+                int drawY = mouseY < startingHeldMousePosition.Y
                     ? (int)(startingHeldMousePosition.Y - height)
                     : (int)startingHeldMousePosition.Y;
 
-                if (mouseState.Position.Y + world.CurrentCamera.Pan.Y < startingHeldMousePosition.Y)
+                if (mouseY < startingHeldMousePosition.Y)
                 {
                     height += BLOCK_SIZE;
                 }
 
-                wall.sprite.position = new Vector2(drawX, drawY);
+                //wall.sprite.position = new Vector2(drawX, drawY);
                 wall.sprite.DrawSize = new Size(width, height);
-                wall.sprite.Update(gameTime);
+                //wall.sprite.Update(gameTime);
             }
             else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
             {
@@ -276,7 +279,7 @@ namespace SprintLevelEditor
 
                 Wall oldWall = new Wall(graphics);
                 oldWall.sprite.DrawSize = wall.sprite.DrawSize;
-                oldWall.sprite.position = new Vector2(wall.sprite.position.X, wall.sprite.position.Y);
+                oldWall.sprite.position = new Vector2(startingHeldMousePosition.X, startingHeldMousePosition.Y);
                 oldWall.sprite.Update(gameTime);
 
                 oldWalls.Add(oldWall);
@@ -307,57 +310,57 @@ namespace SprintLevelEditor
             }
 
             if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE > MIN_BLOCK_SIZE && !isHoldingLeft)
-            {
-                BLOCK_SIZE--;
-                wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-                world.CurrentCameraName = "mainCamera";
-                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom - .1f;
-                grid.resetGrid(world.CurrentCamera.Zoom);
+            {   
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom - 1f;
+                //grid.resetGrid(world.CurrentCamera.Zoom);
+                //BLOCK_SIZE = world.CurrentCamera.Zoom;
+                //wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
             }
 
             if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE < MAX_BLOCK_SIZE && !isHoldingLeft)
-            {
-                BLOCK_SIZE++;
-                wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
-                world.CurrentCameraName = "mainCamera";
-                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom + .1f;
-                grid.resetGrid(world.CurrentCamera.Zoom);
+            {          
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom + 1f;
+                //grid.resetGrid(world.CurrentCamera.Zoom);
+                //BLOCK_SIZE = world.CurrentCamera.Zoom;
+                //wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
             }
 
             if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
             {
-                world.CurrentCameraName = "mainCamera";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + BLOCK_SIZE);
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + 10);
                 world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + BLOCK_SIZE);
-                grid.Pan(0, BLOCK_SIZE);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + 10);
+                grid.Pan(0, 1);
             }   
 
             if (keyboardState.IsKeyDown(Keys.Up) && !isHoldingLeft)
             {
-                world.CurrentCameraName = "mainCamera";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - BLOCK_SIZE);
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - 10);
                 world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - BLOCK_SIZE);
-                grid.Pan(0, -BLOCK_SIZE);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - 10);
+                grid.Pan(0, -1);
             }
 
             if (keyboardState.IsKeyDown(Keys.Left) && !isHoldingLeft)
             {
-                world.CurrentCameraName = "mainCamera";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - BLOCK_SIZE, world.CurrentCamera.Pan.Y);
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - 10, world.CurrentCamera.Pan.Y);
                 world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - BLOCK_SIZE, world.CurrentCamera.Pan.Y);
-                grid.Pan(-BLOCK_SIZE, 0);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - 10, world.CurrentCamera.Pan.Y);
+                grid.Pan(-1, 0);
             }
 
             if (keyboardState.IsKeyDown(Keys.Right) && !isHoldingLeft)
             {
-                world.CurrentCameraName = "mainCamera";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + BLOCK_SIZE, world.CurrentCamera.Pan.Y);
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + 10, world.CurrentCamera.Pan.Y);
                 world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + BLOCK_SIZE, world.CurrentCamera.Pan.Y);
-                grid.Pan(BLOCK_SIZE, 0);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + 10, world.CurrentCamera.Pan.Y);
+                grid.Pan(1, 0);
             }
 
             if (keyboardState.IsKeyDown(Keys.G) && previousKeyboardState.IsKeyUp(Keys.G)) 
@@ -373,10 +376,12 @@ namespace SprintLevelEditor
             }
 
             circle.Update(gameTime);
+            
+            if (!isHoldingLeft)
+            {
+                wall.sprite.position = new Vector2(mouseX - (mouseX % BLOCK_SIZE), mouseY - (mouseY % BLOCK_SIZE));
+            }
             wall.Update(gameTime);
-
-            wall.sprite.position = new Vector2((mouseX + world.CurrentCamera.Pan.X) - (mouseX + world.CurrentCamera.Pan.X) % BLOCK_SIZE, (mouseY + world.CurrentCamera.Pan.Y) - (mouseY + world.CurrentCamera.Pan.Y) % BLOCK_SIZE);
-
             cursorOutline.sprite.color = Color.Red;
             cursorOutline.sprite.position = new Vector2(wall.sprite.position.X - 1, wall.sprite.position.Y - 1);
             cursorOutline.sprite.DrawSize = new Size(wall.sprite.DrawSize.Width + 2, wall.sprite.DrawSize.Height + 2);
@@ -407,7 +412,7 @@ namespace SprintLevelEditor
             world.UpdateCurrentCamera(gameTime);
             world.CurrentCameraName = "minimap";
             world.UpdateCurrentCamera(gameTime);
-            world.CurrentCameraName = "mainCamera";
+            world.CurrentCameraName = "camera1";
 
             base.Update(gameTime);
         }
@@ -451,19 +456,19 @@ namespace SprintLevelEditor
 
         public void MainDraw()
         {
-            world.CurrentCameraName = "mainCamera";
+            world.CurrentCameraName = "camera1";
             world.BeginDraw();
             world.Draw(grid.Draw);
             foreach (Wall oldWall in oldWalls)
             {
-                world.Draw(oldWall.Draw);
+                world.Draw((spriteBatch) => { oldWall.Draw(spriteBatch, world, BLOCK_SIZE); });
             }
-            world.Draw(hoveredOutline.Draw);
-            world.Draw(hoveredBlock.Draw);
-            world.Draw(selectedOutline.Draw);
-            world.Draw(selectedBlock.Draw);
-            world.Draw(cursorOutline.Draw);
-            world.Draw(wall.Draw);
+            world.Draw((spriteBatch) => { hoveredOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
+            world.Draw((spriteBatch) => { hoveredBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
+            world.Draw((spriteBatch) => { selectedOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
+            world.Draw((spriteBatch) => { selectedBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
+            world.Draw((spriteBatch) => { cursorOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
+            world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.EndDraw();
             DrawMinimap();
         }
@@ -472,10 +477,10 @@ namespace SprintLevelEditor
         {
             world.CurrentCameraName = "minimap";
             world.BeginDraw();
-            world.Draw(minimapBackground.Draw);
+            world.Draw((spriteBatch) => { minimapBackground.Draw(spriteBatch, world, BLOCK_SIZE); });
             foreach (Wall oldWall in oldWalls)
             {
-                world.Draw(oldWall.Draw);
+                world.Draw((spriteBatch) => { oldWall.Draw(spriteBatch, world, BLOCK_SIZE); });
             }
             world.EndDraw();
         }
