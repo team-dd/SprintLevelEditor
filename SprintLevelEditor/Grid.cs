@@ -27,17 +27,12 @@ namespace SprintLevelEditor
             screenHeight = height;
             this.blockSize = blockSize;
 
-            resetGrid(1);    
-        }
-
-        public void resetGrid(float zoom)
-        {
             verticalLines = new List<Line>();
             horizontalLines = new List<Line>();
-            float updatedScreenWidth = screenWidth * zoom;
-            float updatedScreenHeight = screenHeight * zoom;
+            float updatedScreenWidth = screenWidth;
+            float updatedScreenHeight = screenHeight;
 
-            foreach (int i in Enumerable.Range(1, (int) (updatedScreenWidth * 10 / blockSize)))
+            foreach (int i in Enumerable.Range(1, (int)(updatedScreenWidth * 10 / blockSize)))
             {
                 Vector2 start = new Vector2((i * blockSize) - (updatedScreenWidth * 5), updatedScreenHeight * -10);
                 Vector2 end = new Vector2((i * blockSize) - (updatedScreenWidth * 5), updatedScreenHeight * 10);
@@ -45,7 +40,7 @@ namespace SprintLevelEditor
                 verticalLines.Add(line);
             }
 
-            foreach (int j in Enumerable.Range(1, (int) (updatedScreenHeight * 10 / blockSize)))
+            foreach (int j in Enumerable.Range(1, (int)(updatedScreenHeight * 10 / blockSize)))
             {
                 Vector2 start = new Vector2(updatedScreenWidth * -10, (j * blockSize) - (updatedScreenHeight * 5));
                 Vector2 end = new Vector2(updatedScreenWidth * 10, (j * blockSize) - (updatedScreenHeight * 5));
@@ -64,7 +59,7 @@ namespace SprintLevelEditor
             isShowing = false;
         }
 
-        public void Pan(int xDelta, int yDelta)
+        public void Pan(float xDelta, float yDelta)
         {
             foreach (Line line in verticalLines)
             {
@@ -81,11 +76,6 @@ namespace SprintLevelEditor
                 line.point1.Y += yDelta;
                 line.point2.Y += yDelta;
             }
-        }
-
-        public void Zoom(float zoom, int blockSize)
-        {
-           // resetGrid(zoom);
         }
 
         public void Draw(SpriteBatch spriteBatch)

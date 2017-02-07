@@ -58,6 +58,7 @@ namespace SprintLevelEditor
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = SCREEN_WIDTH;
             graphics.PreferredBackBufferHeight = SCREEN_HEIGHT;
+            graphics.PreferMultiSampling = true;
             Content.RootDirectory = "Content";
             isHoldingLeft = false;
             isHoldingRight = false;
@@ -121,7 +122,7 @@ namespace SprintLevelEditor
             minimapVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH, SCREEN_HEIGHT), new Size(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10));
             minimapVirtualResolutionRenderer.BackgroundColor = Color.Black;
             minimapCamera = new Camera(minimapVirtualResolutionRenderer, Camera.CameraFocus.TopLeft);
-            minimapCamera.Zoom = .05f;
+            minimapCamera.Zoom = .5f;
             world.AddCamera("minimap", minimapCamera);
 
             world.CurrentCameraName = "camera1";
@@ -269,9 +270,8 @@ namespace SprintLevelEditor
                     height += BLOCK_SIZE;
                 }
 
-                //wall.sprite.position = new Vector2(drawX, drawY);
                 wall.sprite.DrawSize = new Size(width, height);
-                //wall.sprite.Update(gameTime);
+                wall.sprite.position = new Vector2(drawX, drawY);
             }
             else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
             {
@@ -279,7 +279,7 @@ namespace SprintLevelEditor
 
                 Wall oldWall = new Wall(graphics);
                 oldWall.sprite.DrawSize = wall.sprite.DrawSize;
-                oldWall.sprite.position = new Vector2(startingHeldMousePosition.X, startingHeldMousePosition.Y);
+                oldWall.sprite.position = new Vector2(wall.sprite.position.X, wall.sprite.position.Y);
                 oldWall.sprite.Update(gameTime);
 
                 oldWalls.Add(oldWall);
@@ -309,62 +309,44 @@ namespace SprintLevelEditor
                 startFresh();
             }
 
-            if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE > MIN_BLOCK_SIZE && !isHoldingLeft)
+            if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && world.CurrentCamera.Zoom > MIN_BLOCK_SIZE && !isHoldingLeft)
             {   
                 world.CurrentCameraName = "camera1";
                 world.CurrentCamera.Zoom = world.CurrentCamera.Zoom - 1f;
-                //grid.resetGrid(world.CurrentCamera.Zoom);
-                //BLOCK_SIZE = world.CurrentCamera.Zoom;
-                //wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
             }
 
-            if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && BLOCK_SIZE < MAX_BLOCK_SIZE && !isHoldingLeft)
+            if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && world.CurrentCamera.Zoom < MAX_BLOCK_SIZE && !isHoldingLeft)
             {          
                 world.CurrentCameraName = "camera1";
                 world.CurrentCamera.Zoom = world.CurrentCamera.Zoom + 1f;
-                //grid.resetGrid(world.CurrentCamera.Zoom);
-                //BLOCK_SIZE = world.CurrentCamera.Zoom;
-                //wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
             }
 
             if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + 10);
-                world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + 10);
-                grid.Pan(0, 1);
-                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + (1 * world.CurrentCamera.Zoom));
+                grid.Pan(0, 10);
             }   
 
             if (keyboardState.IsKeyDown(Keys.Up) && !isHoldingLeft)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - 10);
-                world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - 10);
-                grid.Pan(0, -1);
-                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - (1 * world.CurrentCamera.Zoom));
+                grid.Pan(0, -10);
             }
 
             if (keyboardState.IsKeyDown(Keys.Left) && !isHoldingLeft)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - 10, world.CurrentCamera.Pan.Y);
-                world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - 10, world.CurrentCamera.Pan.Y);
-                grid.Pan(-1, 0);
-                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - (1 * world.CurrentCamera.Zoom), world.CurrentCamera.Pan.Y);
+                grid.Pan(-10, 0);
             }
 
             if (keyboardState.IsKeyDown(Keys.Right) && !isHoldingLeft)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + 10, world.CurrentCamera.Pan.Y);
-                world.CurrentCameraName = "minimap";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + 10, world.CurrentCamera.Pan.Y);
-                grid.Pan(1, 0);
-                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + (1 * world.CurrentCamera.Zoom), world.CurrentCamera.Pan.Y);
+                grid.Pan(10, 0);
             }
 
             if (keyboardState.IsKeyDown(Keys.G) && previousKeyboardState.IsKeyUp(Keys.G)) 
@@ -480,7 +462,7 @@ namespace SprintLevelEditor
         public void DrawMinimap()
         {
             world.CurrentCameraName = "minimap";
-            world.BeginDraw();
+            world.BeginDraw(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, new RasterizerState(), null, world.CurrentCamera.Transform);
             world.Draw((spriteBatch) => { minimapBackground.Draw(spriteBatch, world, BLOCK_SIZE); });
             foreach (Wall oldWall in oldWalls)
             {
