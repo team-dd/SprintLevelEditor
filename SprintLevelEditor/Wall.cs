@@ -23,9 +23,13 @@ namespace SprintLevelEditor
             sprite.Update(gameTime);
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, World world, float blockSize)
         {
+            Vector2 oldPosition = sprite.position;
+            sprite.position.X = world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).X - (world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).X % blockSize);
+            sprite.position.Y = world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).Y - (world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).Y % blockSize);
             sprite.Draw(spriteBatch);
+            sprite.position = oldPosition;
         }
     }
 }

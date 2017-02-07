@@ -9,6 +9,7 @@ namespace SprintLevelEditor
 {
     public struct SimpleRectangle
     {
+        const int SCALE = 50;
         public int X;
         public int Y;
         public int Width;
@@ -22,10 +23,10 @@ namespace SprintLevelEditor
             Height = height;
         }
 
-        public static SimpleRectangle fromWall(Wall wall, int blockSize, int xOffset, int yOffset)
+        public static SimpleRectangle fromWall(Wall wall, float blockSize, int xOffset, int yOffset)
         {
             Rectangle rectangle = new Rectangle((int)wall.sprite.position.X, (int)wall.sprite.position.Y, (int)wall.sprite.DrawSize.Width, (int)wall.sprite.DrawSize.Height);
-            return new SimpleRectangle(Math.Max(0, (rectangle.X - xOffset) / blockSize), Math.Max(0, (rectangle.Y - yOffset) / blockSize), Math.Max(1, rectangle.Width / blockSize), Math.Max(1, rectangle.Height / blockSize));
+            return new SimpleRectangle(Math.Max(0, (rectangle.X - xOffset) / blockSize) * SCALE, Math.Max(0, (rectangle.Y - yOffset) / blockSize) * SCALE, Math.Max(1, rectangle.Width / blockSize) * SCALE, Math.Max(1, rectangle.Height / blockSize) * SCALE);
         }
     }
 }
