@@ -18,13 +18,21 @@ namespace SprintLevelEditor
     {
         const string MainGame = "game1";
 
-        public int BLOCK_SIZE = 10;
+        private enum EditorState
+        {
+            SHAPE_START,
+            SHAPE_DRAWING,
+            SHAPE_SELECTED
+        }
+
+        public float BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
         public static int MIN_BLOCK_SIZE = 3;
         public int MOVE_SPEED = 10;
         public static int SCREEN_WIDTH = 1800;
         public static int SCREEN_HEIGHT = 1000;
 
+        EditorState editorState;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         GameTimeWrapper mainGameTime;
@@ -32,8 +40,7 @@ namespace SprintLevelEditor
         Circle circle;
         Wall wall;
         List<Wall> oldWalls;
-        List<Wall> redoQueue;
-        List<Line> grid;
+        Grid grid;
         bool isHoldingLeft;
         bool isHoldingRight;
         Vector2 startingHeldMousePosition;
@@ -56,8 +63,14 @@ namespace SprintLevelEditor
             isHoldingRight = false;
             startingHeldMousePosition = Vector2.Zero;
             oldWalls = new List<Wall>();
+<<<<<<< Updated upstream
             redoQueue = new List<Wall>();
             grid = new List<Line>();
+=======
+            isBlockSelected = false;
+            isHoveringOverABlock = false;
+            editorState = EditorState.SHAPE_START;
+>>>>>>> Stashed changes
         }
 
         /// <summary>
@@ -179,34 +192,9 @@ namespace SprintLevelEditor
             }
         }
 
-        public void undo()
-        {
-            if (oldWalls.Count == 0)
-            {
-                return;
-            }
-
-            Wall redoWall = oldWalls[oldWalls.Count - 1];
-            redoQueue.Add(redoWall);
-            oldWalls.RemoveAt(oldWalls.Count - 1);
-        }
-
-        public void redo()
-        {
-            if (redoQueue.Count == 0)
-            {
-                return;
-            }
-
-            Wall redoWall = redoQueue[redoQueue.Count - 1];
-            oldWalls.Add(redoWall);
-            redoQueue.RemoveAt(redoQueue.Count - 1);
-        }
-
         public void startFresh()
         {
             oldWalls = new List<Wall>();
-            redoQueue = new List<Wall>();
         }
 
         public void MainUpdate(GameTimeWrapper gameTime)
@@ -220,6 +208,7 @@ namespace SprintLevelEditor
             int mouseX = mouseState.Position.X;
             int mouseY = mouseState.Position.Y;
 
+<<<<<<< Updated upstream
             if (Mouse.GetState().LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
                 isHoldingLeft = true;
@@ -228,6 +217,61 @@ namespace SprintLevelEditor
                 startingHeldMousePosition.Y = startingHeldMousePosition.Y - (startingHeldMousePosition.Y % BLOCK_SIZE);
             }
             else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && isHoldingLeft)
+=======
+            if (editorState == EditorState.SHAPE_SELECTED)
+            {
+                wall.sprite.position = new Vector2(mouseX - (mouseX % BLOCK_SIZE), mouseY - (mouseY % BLOCK_SIZE));
+                selectedOutline.sprite.position = new Vector2(wall.sprite.position.X - 2, wall.sprite.position.Y - 2);
+                selectedOutline.Update(gameTime);
+            }
+
+            if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
+            {
+                if (isHoveringOverABlock)
+                {
+                    if (hoveredBlock == selectedBlock && editorState == EditorState.SHAPE_SELECTED)
+                    {
+                        editorState = EditorState.SHAPE_START;
+                        selectedBlock = new Wall(graphics);
+                        selectedOutline.sprite.DrawSize = new Size();
+                    }
+                    else
+                    {
+                        editorState = EditorState.SHAPE_SELECTED;
+                        wall.sprite.position = hoveredBlock.sprite.position;
+                        wall.sprite.DrawSize = hoveredBlock.sprite.DrawSize;
+                        selectedOutline = new Wall(graphics);
+                        selectedOutline.sprite.color = Color.DarkRed;
+                        selectedOutline.sprite.position = new Vector2(hoveredOutline.sprite.position.X - 1, hoveredOutline.sprite.position.Y - 1);
+                        selectedOutline.sprite.DrawSize = new Size(hoveredOutline.sprite.DrawSize.Width + 2, hoveredOutline.sprite.DrawSize.Height + 2);
+                        Vector2 newCursorPosition = world.CurrentCamera.MouseToScreenCoords(new Point((int) hoveredBlock.sprite.position.X, (int) hoveredBlock.sprite.position.Y));
+                        Mouse.SetPosition((int) hoveredBlock.sprite.position.X, (int) hoveredBlock.sprite.position.Y);
+                        cursorOutline.sprite.DrawSize = new Size();
+                        oldWalls.Remove(hoveredBlock);
+                    }
+
+                    selectedOutline.Update(gameTime);
+                }
+                else if (editorState == EditorState.SHAPE_SELECTED)
+                {
+                    editorState = EditorState.SHAPE_START;
+                    oldWalls.Add(wall);
+                    Wall newWall = new Wall(graphics);
+                    newWall.sprite.position = wall.sprite.position;
+                    newWall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
+                    wall = newWall;
+                    selectedOutline.sprite.DrawSize = new Size();
+                }
+                else
+                {
+                    editorState = EditorState.SHAPE_DRAWING;
+                    startingHeldMousePosition = new Vector2();
+                    startingHeldMousePosition.X = mouseX - (mouseX % BLOCK_SIZE);
+                    startingHeldMousePosition.Y = mouseY - (mouseY % BLOCK_SIZE);
+                }
+            }
+            else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && !isHoveringOverABlock && editorState == EditorState.SHAPE_DRAWING)
+>>>>>>> Stashed changes
             {
                 float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) - (Math.Abs(startingHeldMousePosition.X - Mouse.GetState().Position.X) % BLOCK_SIZE));
                 float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) - (Math.Abs(startingHeldMousePosition.Y - Mouse.GetState().Position.Y) % BLOCK_SIZE));
@@ -254,9 +298,13 @@ namespace SprintLevelEditor
                 wall.sprite.DrawSize = new Size(width, height);
                 wall.sprite.Update(gameTime);
             }
+<<<<<<< Updated upstream
             else if (Mouse.GetState().LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
+=======
+            else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed && editorState == EditorState.SHAPE_DRAWING)
+>>>>>>> Stashed changes
             {
-                isHoldingLeft = false;
+                editorState = EditorState.SHAPE_START;
 
                 Wall oldWall = new Wall(graphics);
                 oldWall.sprite.DrawSize = wall.sprite.DrawSize;
@@ -266,6 +314,7 @@ namespace SprintLevelEditor
                 oldWalls.Add(oldWall);
                 startingHeldMousePosition = Vector2.Zero;
                 wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
+<<<<<<< Updated upstream
 
                 redoQueue = new List<Wall>();
             }
@@ -277,16 +326,21 @@ namespace SprintLevelEditor
             if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
             {
                 saveGame();
+=======
+>>>>>>> Stashed changes
             }
 
-            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.Z) && previousKeyboardState.IsKeyUp(Keys.Z))
+            if (mouseState.RightButton == ButtonState.Pressed)
             {
-                undo();
+                if (isHoveringOverABlock)
+                {
+                    oldWalls.Remove(hoveredBlock);
+                }
             }
 
-            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.Y) && previousKeyboardState.IsKeyUp(Keys.Y))
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.S) && previousKeyboardState.IsKeyUp(Keys.S))
             {
-                redo();
+                saveGame();
             }
 
             if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.N) && previousKeyboardState.IsKeyUp(Keys.N))
@@ -294,6 +348,7 @@ namespace SprintLevelEditor
                 startFresh();
             }
 
+<<<<<<< Updated upstream
             if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && BLOCK_SIZE > MIN_BLOCK_SIZE && !isHoldingLeft)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
@@ -366,9 +421,21 @@ namespace SprintLevelEditor
                 {
                     makeGrid();
                 }
+=======
+            if (Mouse.GetState().ScrollWheelValue < previousMouseState.ScrollWheelValue && world.CurrentCamera.Zoom > MIN_BLOCK_SIZE && editorState != EditorState.SHAPE_DRAWING)
+            {   
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom - 1f;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Down) && !isHoldingLeft)
+            if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && world.CurrentCamera.Zoom < MAX_BLOCK_SIZE && editorState != EditorState.SHAPE_DRAWING)
+            {          
+                world.CurrentCameraName = "camera1";
+                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom + 1f;
+>>>>>>> Stashed changes
+            }
+
+            if (keyboardState.IsKeyDown(Keys.Down) && editorState != EditorState.SHAPE_DRAWING)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
@@ -393,7 +460,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Up) && !isHoldingLeft)
+            if (keyboardState.IsKeyDown(Keys.Up) && editorState != EditorState.SHAPE_DRAWING)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
@@ -418,7 +485,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Left) && !isHoldingLeft)
+            if (keyboardState.IsKeyDown(Keys.Left) && editorState != EditorState.SHAPE_DRAWING)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
@@ -443,7 +510,7 @@ namespace SprintLevelEditor
                 redoQueue = scaledRedoQueue;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Right) && !isHoldingLeft)
+            if (keyboardState.IsKeyDown(Keys.Right) && editorState != EditorState.SHAPE_DRAWING)
             {
                 List<Wall> scaledOldWalls = new List<Wall>();
                 foreach (Wall oldWall in oldWalls)
@@ -483,7 +550,42 @@ namespace SprintLevelEditor
             }
 
             circle.Update(gameTime);
+<<<<<<< Updated upstream
             wall.Update(gameTime);
+=======
+            
+            if (editorState == EditorState.SHAPE_START)
+            {
+                wall.sprite.position = new Vector2(mouseX - (mouseX % BLOCK_SIZE), mouseY - (mouseY % BLOCK_SIZE));
+            }
+            if (editorState != EditorState.SHAPE_SELECTED)
+            {
+                cursorOutline.sprite.color = Color.Red;
+                cursorOutline.sprite.position = new Vector2(wall.sprite.position.X - 1, wall.sprite.position.Y - 1);
+                cursorOutline.sprite.DrawSize = new Size(wall.sprite.DrawSize.Width + 2, wall.sprite.DrawSize.Height + 2);
+            }
+            wall.Update(gameTime);
+            cursorOutline.Update(gameTime);
+
+            hoveredOutline.sprite.DrawSize = new Size(0, 0);
+            isHoveringOverABlock = false;
+            hoveredBlock = new Wall(graphics);
+            List<Wall> reversedWalls = oldWalls;
+            reversedWalls.Reverse();
+            foreach (Wall oldWall in reversedWalls)
+            {
+                if (isHoveringOverBlock(oldWall) && editorState == EditorState.SHAPE_START)
+                {
+                    isHoveringOverABlock = true;
+                    hoveredBlock = oldWall;
+                    hoveredOutline.sprite.color = Color.DarkRed;
+                    hoveredOutline.sprite.position = new Vector2(oldWall.sprite.position.X - 1, oldWall.sprite.position.Y - 1);
+                    hoveredOutline.sprite.DrawSize = new Size(oldWall.sprite.DrawSize.Width + 2, oldWall.sprite.DrawSize.Height + 2);                 
+                }
+            }
+
+            hoveredOutline.Update(gameTime);
+>>>>>>> Stashed changes
 
             previousKeyboardState = keyboardState;
             previousMouseState = Mouse.GetState();
