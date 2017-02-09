@@ -9,7 +9,7 @@ namespace SprintLevelEditor
 {
     public struct SimpleRectangle
     {
-        const int SCALE = 50;
+        const int SCALE = 5;
         public int X;
         public int Y;
         public int Width;
