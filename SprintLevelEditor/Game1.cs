@@ -228,8 +228,6 @@ namespace SprintLevelEditor
                         selectedOutline.sprite.color = Color.DarkRed;
                         selectedOutline.sprite.position = new Vector2(hoveredOutline.sprite.position.X - 1, hoveredOutline.sprite.position.Y - 1);
                         selectedOutline.sprite.DrawSize = new Size(hoveredOutline.sprite.DrawSize.Width + 2, hoveredOutline.sprite.DrawSize.Height + 2);
-                        Vector2 newCursorPosition = world.CurrentCamera.MouseToScreenCoords(new Point((int) hoveredBlock.sprite.position.X, (int) hoveredBlock.sprite.position.Y));
-                        Mouse.SetPosition((int) hoveredBlock.sprite.position.X, (int) hoveredBlock.sprite.position.Y);
                         cursorOutline.sprite.DrawSize = new Size();
                         oldWalls.Remove(hoveredBlock);
                     }
