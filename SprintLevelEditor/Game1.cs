@@ -32,6 +32,7 @@ namespace SprintLevelEditor
         public static int SCREEN_WIDTH = 1800;
         public static int SCREEN_HEIGHT = 1000;
 
+        bool shouldIgnoreOneLeftClick;
         EditorState editorState;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -74,6 +75,7 @@ namespace SprintLevelEditor
             isBlockSelected = false;
             isHoveringOverABlock = false;
             editorState = EditorState.SHAPE_START;
+            shouldIgnoreOneLeftClick = false;
         }
 
         /// <summary>
@@ -209,7 +211,11 @@ namespace SprintLevelEditor
                 selectedOutline.Update(gameTime);
             }
 
-            if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
+            if (shouldIgnoreOneLeftClick)
+            {
+                shouldIgnoreOneLeftClick = false;
+            }
+            else if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
                 if (isHoveringOverABlock)
                 {
@@ -426,6 +432,12 @@ namespace SprintLevelEditor
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            if (!this.IsActive)
+            {
+                shouldIgnoreOneLeftClick = true;
+                return;
+            }
+
             // TODO: Add your update logic here
             world.Update(gameTime);
             base.Update(gameTime);
@@ -437,6 +449,11 @@ namespace SprintLevelEditor
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            if (!this.IsActive)
+            {
+                return;
+            }
+
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             world.DrawWorld();
