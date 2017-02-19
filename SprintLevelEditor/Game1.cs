@@ -60,6 +60,7 @@ namespace SprintLevelEditor
         Wall hoveredBlock;
         Wall selectedBlock;
         Wall selectedOutline;
+        Menu menu;
 
         public Game1()
         {
@@ -105,6 +106,7 @@ namespace SprintLevelEditor
             world = new World(graphics);
             world.virtualResolutionRenderer.VirtualResolution = new Vector2(SCREEN_WIDTH, SCREEN_HEIGHT);
             circle = new Circle(Content.Load<Texture2D>("circle"));
+            menu = new Menu(Content.Load<Texture2D>("button-rectangle"), Content.Load<Texture2D>("button-triangle"), Content.Load<Texture2D>("button-start"), Content.Load<Texture2D>("button-end"));
 
             grid = new Grid(graphics, SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
 
@@ -476,6 +478,7 @@ namespace SprintLevelEditor
             world.Draw((spriteBatch) => { selectedBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { cursorOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
+            world.Draw(menu.Draw);
             world.EndDraw();
             DrawMinimap();
         }
