@@ -34,5 +34,23 @@ namespace SprintLevelEditor
                 button.Draw(spriteBatch, world);
             }
         }
+
+        public bool isHoveringOverAnyButton()
+        {
+            return buttons.Any((button) => { return button.isHoveringOver(); });
+        }
+
+        public void clickHoveredButton()
+        {
+            foreach (MenuButton button in buttons)
+            {
+                if (button.selected)
+                {
+                    button.Unselect();
+                }
+            }
+
+            buttons.First((button) => { return button.isHoveringOver(); }).Select();
+        }
     }
 }

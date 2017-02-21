@@ -42,6 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Circle.cs" />
+    <Compile Include="EndPoint.cs" />
     <Compile Include="Grid.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="MenuButton.cs" />
@@ -75,6 +76,7 @@
     <Content Include="Content\button-triangle-selected.png" />
     <Content Include="Content\button-triangle.png" />
     <Content Include="Content\circle.png" />
+    <Content Include="Content\end.png" />
     <Content Include="Icon.ico" />
   </ItemGroup>
   <ItemGroup>

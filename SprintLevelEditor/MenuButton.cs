@@ -12,29 +12,33 @@ namespace SprintLevelEditor
 {
     class MenuButton : Sprite
     {
-        private bool selected;
-        private bool hovered;
+        public bool selected;
+        public bool hovered;
         Texture2D baseTex;
         Texture2D hoverTex;
         Texture2D selectedTex;
+        Action selectedFunction;
 
-        public MenuButton(Texture2D tex) : base(tex)
+        public MenuButton(Texture2D tex, Action selectedFunction) : base(tex)
         {
             selected = false;
+            hovered = false;
             this.baseTex = tex;
             this.hoverTex = null;
             this.selectedTex = null;
+            this.selectedFunction = selectedFunction;
         }
 
-        public MenuButton(Texture2D tex, Texture2D hoverTex, Texture2D selectedTex) : base(tex)
+        public MenuButton(Texture2D tex, Texture2D hoverTex, Texture2D selectedTex, Action selectedFunction) : base(tex)
         {
             selected = false;
             baseTex = tex;
             this.hoverTex = hoverTex;
             this.selectedTex = selectedTex;
+            this.selectedFunction = selectedFunction;
         }
 
-        private bool isHoveringOver()
+        public bool isHoveringOver()
         {
             MouseState mouseState = Mouse.GetState();
             return (rectangle.Contains(mouseState.Position.X, mouseState.Position.Y));
@@ -44,13 +48,15 @@ namespace SprintLevelEditor
         {
             bool isHovering = isHoveringOver();
 
-            if (isHovering && hoverTex != null && this.tex == baseTex)
+            if (isHovering && hoverTex != null && !hovered && !selected)
             {
                 tex = hoverTex;
+                hovered = true;
             }
-            else if (!isHovering && this.tex != baseTex)
+            else if (!isHovering && hovered && !selected)
             {
                 tex = baseTex;
+                hovered = false;
             }
 
             base.Update(gameTime);
@@ -58,12 +64,19 @@ namespace SprintLevelEditor
 
         public void Select()
         {
-            this.tex = selectedTex;
+            if (selectedTex != null)
+            {
+                this.tex = selectedTex;
+            }
+            
+            selected = true;
+            selectedFunction.Invoke();
         }
 
         public void Unselect()
         {
             this.tex = baseTex;
+            selected = false;
         }
 
         public void Draw(SpriteBatch spriteBatch, World world)

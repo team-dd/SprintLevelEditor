@@ -25,6 +25,14 @@ namespace SprintLevelEditor
             SHAPE_SELECTED
         }
 
+        private enum SelectedShape
+        {
+            RECTANGLE,
+            TRIANGLE,
+            START_POINT,
+            END_POINT
+        }
+
         public float BLOCK_SIZE = 10;
         public static int MAX_BLOCK_SIZE = 50;
         public static int MIN_BLOCK_SIZE = 3;
@@ -34,6 +42,7 @@ namespace SprintLevelEditor
 
         bool shouldIgnoreOneLeftClick;
         EditorState editorState;
+        SelectedShape selectedShape;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         GameTimeWrapper mainGameTime;
@@ -61,6 +70,8 @@ namespace SprintLevelEditor
         Wall selectedBlock;
         Wall selectedOutline;
         Menu menu;
+        EndPoint endPoint;
+        bool justClickedButton;
 
         public Game1()
         {
@@ -76,7 +87,9 @@ namespace SprintLevelEditor
             isBlockSelected = false;
             isHoveringOverABlock = false;
             editorState = EditorState.SHAPE_START;
+            selectedShape = SelectedShape.RECTANGLE;
             shouldIgnoreOneLeftClick = false;
+            justClickedButton = false;
         }
 
         /// <summary>
@@ -95,6 +108,34 @@ namespace SprintLevelEditor
             base.Initialize();
         }
 
+        public void selectRectangle()
+        {
+            selectedShape = SelectedShape.RECTANGLE;
+            endPoint.Hide();
+            justClickedButton = true;
+        }
+
+        public void selectTriangle()
+        {
+            selectedShape = SelectedShape.TRIANGLE;
+            endPoint.Hide();
+            justClickedButton = true;
+        }
+
+        public void selectStartPoint()
+        {
+            selectedShape = SelectedShape.START_POINT;
+            endPoint.Hide();
+            justClickedButton = true;
+        }
+
+        public void selectEndPoint()
+        {
+            selectedShape = SelectedShape.END_POINT;
+            endPoint.Show();
+            justClickedButton = true;
+        }
+
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
@@ -107,17 +148,19 @@ namespace SprintLevelEditor
             world.virtualResolutionRenderer.VirtualResolution = new Vector2(SCREEN_WIDTH, SCREEN_HEIGHT);
             circle = new Circle(Content.Load<Texture2D>("circle"));
 
-            MenuButton rectangleButton = new MenuButton(Content.Load<Texture2D>("button-rectangle"), Content.Load<Texture2D>("button-rectangle-hover"), Content.Load<Texture2D>("button-rectangle-selected"));
+            MenuButton rectangleButton = new MenuButton(Content.Load<Texture2D>("button-rectangle"), Content.Load<Texture2D>("button-rectangle-hover"), Content.Load<Texture2D>("button-rectangle-selected"), selectRectangle);
             rectangleButton.position = new Vector2(405, 20);
-            MenuButton triangleButton = new MenuButton(Content.Load<Texture2D>("button-triangle"), Content.Load<Texture2D>("button-triangle-hover"), Content.Load<Texture2D>("button-triangle-selected"));
+            MenuButton triangleButton = new MenuButton(Content.Load<Texture2D>("button-triangle"), Content.Load<Texture2D>("button-triangle-hover"), Content.Load<Texture2D>("button-triangle-selected"), selectTriangle);
             triangleButton.position = new Vector2(505, 20);
-            MenuButton startButton = new MenuButton(Content.Load<Texture2D>("button-start"));
+            MenuButton startButton = new MenuButton(Content.Load<Texture2D>("button-start"), selectStartPoint);
             startButton.position = new Vector2(605, 20);
-            MenuButton endButton = new MenuButton(Content.Load<Texture2D>("button-end"));
+            MenuButton endButton = new MenuButton(Content.Load<Texture2D>("button-end"), selectEndPoint);
             endButton.position = new Vector2(705, 20);
             List<MenuButton> buttons = new List<MenuButton> { rectangleButton, triangleButton, startButton, endButton };
 
             menu = new Menu(buttons);
+
+            endPoint = new EndPoint(Content.Load<Texture2D>("end"));
 
             grid = new Grid(graphics, SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
 
@@ -216,6 +259,7 @@ namespace SprintLevelEditor
             Vector2 mousePosition = world.CurrentCamera.MouseToScreenCoords(Mouse.GetState().Position);
             float mouseX = mousePosition.X;
             float mouseY = mousePosition.Y;
+            bool isHoveringOverAnyButton = menu.isHoveringOverAnyButton();
 
             if (editorState == EditorState.SHAPE_SELECTED)
             {
@@ -230,7 +274,11 @@ namespace SprintLevelEditor
             }
             else if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
-                if (isHoveringOverABlock)
+                if (isHoveringOverAnyButton)
+                {
+                    menu.clickHoveredButton();
+                }
+                else if (isHoveringOverABlock)
                 {
                     if (hoveredBlock == selectedBlock && editorState == EditorState.SHAPE_SELECTED)
                     {
@@ -265,50 +313,71 @@ namespace SprintLevelEditor
                 }
                 else
                 {
-                    editorState = EditorState.SHAPE_DRAWING;
-                    startingHeldMousePosition = new Vector2();
-                    startingHeldMousePosition.X = mouseX - (mouseX % BLOCK_SIZE);
-                    startingHeldMousePosition.Y = mouseY - (mouseY % BLOCK_SIZE);
+                    if (selectedShape == SelectedShape.RECTANGLE)
+                    {
+                        editorState = EditorState.SHAPE_DRAWING;
+                        startingHeldMousePosition = new Vector2();
+                        startingHeldMousePosition.X = mouseX - (mouseX % BLOCK_SIZE);
+                        startingHeldMousePosition.Y = mouseY - (mouseY % BLOCK_SIZE);
+                    }
                 }
             }
             else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && !isHoveringOverABlock && editorState == EditorState.SHAPE_DRAWING)
             {
-                float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - mouseX) - (Math.Abs(startingHeldMousePosition.X - mouseX) % BLOCK_SIZE));
-                float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - mouseY) - (Math.Abs(startingHeldMousePosition.Y - mouseY) % BLOCK_SIZE));
-
-                int drawX = mouseX < startingHeldMousePosition.X
-                    ? (int)(startingHeldMousePosition.X - width)
-                    : (int)startingHeldMousePosition.X;
-
-                if (mouseX < startingHeldMousePosition.X)
+                if (selectedShape == SelectedShape.RECTANGLE)
                 {
-                    width += BLOCK_SIZE;
+                    float width = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.X - mouseX) - (Math.Abs(startingHeldMousePosition.X - mouseX) % BLOCK_SIZE));
+                    float height = Math.Max(BLOCK_SIZE, Math.Abs(startingHeldMousePosition.Y - mouseY) - (Math.Abs(startingHeldMousePosition.Y - mouseY) % BLOCK_SIZE));
+
+                    int drawX = mouseX < startingHeldMousePosition.X
+                        ? (int)(startingHeldMousePosition.X - width)
+                        : (int)startingHeldMousePosition.X;
+
+                    if (mouseX < startingHeldMousePosition.X)
+                    {
+                        width += BLOCK_SIZE;
+                    }
+
+                    int drawY = mouseY < startingHeldMousePosition.Y
+                        ? (int)(startingHeldMousePosition.Y - height)
+                        : (int)startingHeldMousePosition.Y;
+
+                    if (mouseY < startingHeldMousePosition.Y)
+                    {
+                        height += BLOCK_SIZE;
+                    }
+
+                    wall.sprite.DrawSize = new Size(width, height);
+                    wall.sprite.position = new Vector2(drawX, drawY);
                 }
-
-                int drawY = mouseY < startingHeldMousePosition.Y
-                    ? (int)(startingHeldMousePosition.Y - height)
-                    : (int)startingHeldMousePosition.Y;
-
-                if (mouseY < startingHeldMousePosition.Y)
-                {
-                    height += BLOCK_SIZE;
-                }
-
-                wall.sprite.DrawSize = new Size(width, height);
-                wall.sprite.position = new Vector2(drawX, drawY);
             }
-            else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed && editorState == EditorState.SHAPE_DRAWING)
+            else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed && (editorState == EditorState.SHAPE_DRAWING || selectedShape == SelectedShape.START_POINT || selectedShape == SelectedShape.END_POINT))
             {
-                editorState = EditorState.SHAPE_START;
+                if (justClickedButton)
+                {
+                    justClickedButton = false;
+                }
+                else
+                {
+                    editorState = EditorState.SHAPE_START;
 
-                Wall oldWall = new Wall(graphics);
-                oldWall.sprite.DrawSize = wall.sprite.DrawSize;
-                oldWall.sprite.position = new Vector2(wall.sprite.position.X, wall.sprite.position.Y);
-                oldWall.sprite.Update(gameTime);
+                    if (selectedShape == SelectedShape.RECTANGLE)
+                    {
+                        Wall oldWall = new Wall(graphics);
+                        oldWall.sprite.DrawSize = wall.sprite.DrawSize;
+                        oldWall.sprite.position = new Vector2(wall.sprite.position.X, wall.sprite.position.Y);
+                        oldWall.sprite.Update(gameTime);
 
-                oldWalls.Add(oldWall);
-                startingHeldMousePosition = Vector2.Zero;
-                wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
+                        oldWalls.Add(oldWall);
+                        startingHeldMousePosition = Vector2.Zero;
+                        wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
+                    }
+                    else if (selectedShape == SelectedShape.END_POINT)
+                    {
+                        endPoint.Place();
+                        selectedShape = SelectedShape.RECTANGLE;
+                    }
+                }
             }
 
             if (mouseState.RightButton == ButtonState.Pressed)
@@ -387,6 +456,7 @@ namespace SprintLevelEditor
             {
                 wall.sprite.position = new Vector2(mouseX - (mouseX % BLOCK_SIZE), mouseY - (mouseY % BLOCK_SIZE));
             }
+
             if (editorState != EditorState.SHAPE_SELECTED)
             {
                 cursorOutline.sprite.color = Color.Red;
@@ -403,7 +473,7 @@ namespace SprintLevelEditor
             reversedWalls.Reverse();
             foreach (Wall oldWall in reversedWalls)
             {
-                if (isHoveringOverBlock(oldWall) && editorState == EditorState.SHAPE_START)
+                if (isHoveringOverBlock(oldWall) && editorState == EditorState.SHAPE_START && selectedShape == SelectedShape.RECTANGLE)
                 {
                     isHoveringOverABlock = true;
                     hoveredBlock = oldWall;
@@ -411,6 +481,11 @@ namespace SprintLevelEditor
                     hoveredOutline.sprite.position = new Vector2(oldWall.sprite.position.X - 1, oldWall.sprite.position.Y - 1);
                     hoveredOutline.sprite.DrawSize = new Size(oldWall.sprite.DrawSize.Width + 2, oldWall.sprite.DrawSize.Height + 2);                 
                 }
+            }
+
+            if (!endPoint.isPlaced)
+            {
+                endPoint.position = wall.sprite.position;
             }
 
             hoveredOutline.Update(gameTime);
@@ -489,9 +564,14 @@ namespace SprintLevelEditor
             world.Draw((spriteBatch) => { hoveredBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { selectedOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { selectedBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
-            world.Draw((spriteBatch) => { cursorOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
-            world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
+            if (selectedShape == SelectedShape.RECTANGLE)
+            {
+                world.Draw((spriteBatch) => { cursorOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
+                world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
+            }
             world.Draw((spriteBatch) => { menu.Draw(spriteBatch, world); });
+            world.Draw(endPoint.Draw);
+            
             world.EndDraw();
             DrawMinimap();
         }
