@@ -70,7 +70,8 @@ namespace SprintLevelEditor
         Wall selectedBlock;
         Wall selectedOutline;
         Menu menu;
-        EndPoint endPoint;
+        Marker startPoint;
+        Marker endPoint;
         bool justClickedButton;
 
         public Game1()
@@ -111,6 +112,7 @@ namespace SprintLevelEditor
         public void selectRectangle()
         {
             selectedShape = SelectedShape.RECTANGLE;
+            startPoint.Hide();
             endPoint.Hide();
             justClickedButton = true;
         }
@@ -118,6 +120,7 @@ namespace SprintLevelEditor
         public void selectTriangle()
         {
             selectedShape = SelectedShape.TRIANGLE;
+            startPoint.Hide();
             endPoint.Hide();
             justClickedButton = true;
         }
@@ -125,6 +128,7 @@ namespace SprintLevelEditor
         public void selectStartPoint()
         {
             selectedShape = SelectedShape.START_POINT;
+            startPoint.Show();
             endPoint.Hide();
             justClickedButton = true;
         }
@@ -132,6 +136,7 @@ namespace SprintLevelEditor
         public void selectEndPoint()
         {
             selectedShape = SelectedShape.END_POINT;
+            startPoint.Hide();
             endPoint.Show();
             justClickedButton = true;
         }
@@ -160,7 +165,8 @@ namespace SprintLevelEditor
 
             menu = new Menu(buttons);
 
-            endPoint = new EndPoint(Content.Load<Texture2D>("end"));
+            startPoint = new Marker(Content.Load<Texture2D>("start"));
+            endPoint = new Marker(Content.Load<Texture2D>("end"));
 
             grid = new Grid(graphics, SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
 
@@ -372,6 +378,11 @@ namespace SprintLevelEditor
                         startingHeldMousePosition = Vector2.Zero;
                         wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
                     }
+                    else if (selectedShape == SelectedShape.START_POINT)
+                    {
+                        startPoint.Place();
+                        selectedShape = SelectedShape.RECTANGLE;
+                    }
                     else if (selectedShape == SelectedShape.END_POINT)
                     {
                         endPoint.Place();
@@ -483,6 +494,11 @@ namespace SprintLevelEditor
                 }
             }
 
+            if (!startPoint.isPlaced)
+            {
+                startPoint.position = wall.sprite.position;
+            }
+
             if (!endPoint.isPlaced)
             {
                 endPoint.position = wall.sprite.position;
@@ -570,6 +586,7 @@ namespace SprintLevelEditor
                 world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
             }
             world.Draw((spriteBatch) => { menu.Draw(spriteBatch, world); });
+            world.Draw(startPoint.Draw);
             world.Draw(endPoint.Draw);
             
             world.EndDraw();

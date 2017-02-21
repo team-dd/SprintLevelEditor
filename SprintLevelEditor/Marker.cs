@@ -8,12 +8,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SprintLevelEditor
 {
-    class EndPoint : Sprite
+    class Marker : Sprite
     {
         private bool shouldRender;
         public bool isPlaced;
 
-        public EndPoint(Texture2D tex) : base(tex)
+        public Marker(Texture2D tex) : base(tex)
         {
             shouldRender = false;
             isPlaced = false;
