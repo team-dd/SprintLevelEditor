@@ -12,30 +12,27 @@ namespace SprintLevelEditor
 {
     class Menu 
     {
-        MenuButton rectangle;
-        MenuButton triangle;
-        MenuButton start;
-        MenuButton end;
+        List<MenuButton> buttons;
 
-        public Menu(Texture2D rectangleTexture, Texture2D triangleTexture, Texture2D startTexture, Texture2D endTexture)
+        public Menu(List<MenuButton> buttons)
         {
-            rectangle = new MenuButton(rectangleTexture);
-            triangle = new MenuButton(triangleTexture);
-            start = new MenuButton(startTexture);
-            end = new MenuButton(endTexture);
-
-            rectangle.position = new Vector2(5, 5);
-            triangle.position = new Vector2(105, 5);
-            start.position = new Vector2(205, 5);
-            end.position = new Vector2(305, 5);
+            this.buttons = buttons;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update(GameTimeWrapper gameTime)
         {
-            rectangle.Draw(spriteBatch);
-            triangle.Draw(spriteBatch);
-            start.Draw(spriteBatch);
-            end.Draw(spriteBatch);
+            foreach (MenuButton button in buttons)
+            {
+                button.Update(gameTime);
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch, World world)
+        {
+            foreach (MenuButton button in buttons)
+            {
+                button.Draw(spriteBatch, world);
+            }
         }
     }
 }

@@ -106,7 +106,18 @@ namespace SprintLevelEditor
             world = new World(graphics);
             world.virtualResolutionRenderer.VirtualResolution = new Vector2(SCREEN_WIDTH, SCREEN_HEIGHT);
             circle = new Circle(Content.Load<Texture2D>("circle"));
-            menu = new Menu(Content.Load<Texture2D>("button-rectangle"), Content.Load<Texture2D>("button-triangle"), Content.Load<Texture2D>("button-start"), Content.Load<Texture2D>("button-end"));
+
+            MenuButton rectangleButton = new MenuButton(Content.Load<Texture2D>("button-rectangle"), Content.Load<Texture2D>("button-rectangle-hover"), Content.Load<Texture2D>("button-rectangle-selected"));
+            rectangleButton.position = new Vector2(405, 20);
+            MenuButton triangleButton = new MenuButton(Content.Load<Texture2D>("button-triangle"), Content.Load<Texture2D>("button-triangle-hover"), Content.Load<Texture2D>("button-triangle-selected"));
+            triangleButton.position = new Vector2(505, 20);
+            MenuButton startButton = new MenuButton(Content.Load<Texture2D>("button-start"));
+            startButton.position = new Vector2(605, 20);
+            MenuButton endButton = new MenuButton(Content.Load<Texture2D>("button-end"));
+            endButton.position = new Vector2(705, 20);
+            List<MenuButton> buttons = new List<MenuButton> { rectangleButton, triangleButton, startButton, endButton };
+
+            menu = new Menu(buttons);
 
             grid = new Grid(graphics, SCREEN_WIDTH, SCREEN_HEIGHT, BLOCK_SIZE);
 
@@ -412,6 +423,8 @@ namespace SprintLevelEditor
             world.UpdateCurrentCamera(gameTime);
             world.CurrentCameraName = "camera1";
 
+            menu.Update(gameTime);
+
             base.Update(gameTime);
         }
 
@@ -478,7 +491,7 @@ namespace SprintLevelEditor
             world.Draw((spriteBatch) => { selectedBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { cursorOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
-            world.Draw(menu.Draw);
+            world.Draw((spriteBatch) => { menu.Draw(spriteBatch, world); });
             world.EndDraw();
             DrawMinimap();
         }

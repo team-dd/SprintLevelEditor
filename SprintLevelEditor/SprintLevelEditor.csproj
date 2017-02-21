@@ -67,8 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\button-end.png" />
+    <Content Include="Content\button-rectangle-hover.png" />
+    <Content Include="Content\button-rectangle-selected.png" />
     <Content Include="Content\button-rectangle.png" />
     <Content Include="Content\button-start.png" />
+    <Content Include="Content\button-triangle-hover.png" />
+    <Content Include="Content\button-triangle-selected.png" />
     <Content Include="Content\button-triangle.png" />
     <Content Include="Content\circle.png" />
     <Content Include="Icon.ico" />
