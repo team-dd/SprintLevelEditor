@@ -47,6 +47,7 @@
     <Compile Include="Menu.cs" />
     <Compile Include="MenuButton.cs" />
     <Compile Include="SimpleRectangle.cs" />
+    <Compile Include="Triangle.cs" />
     <Compile Include="Wall.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Program.cs" />
@@ -78,6 +79,7 @@
     <Content Include="Content\circle.png" />
     <Content Include="Content\end.png" />
     <Content Include="Content\start.png" />
+    <Content Include="Content\triangle.png" />
     <Content Include="Icon.ico" />
   </ItemGroup>
   <ItemGroup>

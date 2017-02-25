@@ -51,6 +51,8 @@ namespace SprintLevelEditor
         Wall wall;
         Wall cursorOutline;
         List<Wall> oldWalls;
+        List<Triangle> oldTriangles;
+        Triangle currentTriangle;
         Grid grid;
         bool isHoldingLeft;
         bool isHoldingRight;
@@ -122,6 +124,7 @@ namespace SprintLevelEditor
             selectedShape = SelectedShape.TRIANGLE;
             startPoint.Hide();
             endPoint.Hide();
+            currentTriangle.DrawSize = new Size(10, 10);
             justClickedButton = true;
         }
 
@@ -178,6 +181,10 @@ namespace SprintLevelEditor
 
             hoveredBlock = new Wall(graphics);
             selectedBlock = new Wall(graphics);
+
+            currentTriangle = new Triangle(Content.Load<Texture2D>("triangle"));
+            currentTriangle.DrawSize = new Size(10, 10);
+            oldTriangles = new List<Triangle>();
 
             wall = new Wall(graphics);
             wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
@@ -326,6 +333,13 @@ namespace SprintLevelEditor
                         startingHeldMousePosition.X = mouseX - (mouseX % BLOCK_SIZE);
                         startingHeldMousePosition.Y = mouseY - (mouseY % BLOCK_SIZE);
                     }
+                    else if (selectedShape == SelectedShape.TRIANGLE)
+                    {
+                        editorState = EditorState.SHAPE_DRAWING;
+                        startingHeldMousePosition = new Vector2();
+                        startingHeldMousePosition.X = mouseX - (mouseX % BLOCK_SIZE);
+                        startingHeldMousePosition.Y = mouseY - (mouseY % BLOCK_SIZE);
+                    }
                 }
             }
             else if (previousMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton != ButtonState.Released && !isHoveringOverABlock && editorState == EditorState.SHAPE_DRAWING)
@@ -356,8 +370,39 @@ namespace SprintLevelEditor
                     wall.sprite.DrawSize = new Size(width, height);
                     wall.sprite.position = new Vector2(drawX, drawY);
                 }
+                else if (selectedShape == SelectedShape.TRIANGLE)
+                {
+                    float width = Math.Max(BLOCK_SIZE * 2, Math.Abs(startingHeldMousePosition.X - mouseX) - (Math.Abs(startingHeldMousePosition.X - mouseX) % (BLOCK_SIZE*2)));
+                    float height = Math.Max(BLOCK_SIZE * 2, Math.Abs(startingHeldMousePosition.Y - mouseY) - (Math.Abs(startingHeldMousePosition.Y - mouseY) % (BLOCK_SIZE*2)));
+
+                    int drawX = (int)startingHeldMousePosition.X;
+
+                    if (mouseX < startingHeldMousePosition.X)
+                    {
+                        //width += BLOCK_SIZE;
+                        currentTriangle.horizontalFlip = false;
+                    } else
+                    {
+                        currentTriangle.horizontalFlip = true;
+                    }
+
+                    int drawY = (int)startingHeldMousePosition.Y;
+
+                    if (mouseY < startingHeldMousePosition.Y)
+                    {
+                        //height += BLOCK_SIZE;
+                        currentTriangle.verticalFlip = false;
+                    }
+                    else
+                    {
+                        currentTriangle.verticalFlip = true;
+                    }
+
+                    currentTriangle.DrawSize = new Size(width, height);
+                    wall.sprite.position = new Vector2(drawX, drawY);
+                }
             }
-            else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed && (editorState == EditorState.SHAPE_DRAWING || selectedShape == SelectedShape.START_POINT || selectedShape == SelectedShape.END_POINT))
+            else if (mouseState.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed && (editorState == EditorState.SHAPE_DRAWING || selectedShape == SelectedShape.START_POINT || selectedShape == SelectedShape.END_POINT || selectedShape == SelectedShape.TRIANGLE))
             {
                 if (justClickedButton)
                 {
@@ -387,6 +432,20 @@ namespace SprintLevelEditor
                     {
                         endPoint.Place();
                         selectedShape = SelectedShape.RECTANGLE;
+                    }
+                    else if (selectedShape == SelectedShape.TRIANGLE)
+                    {
+                        Triangle oldTriangle = new Triangle(Content.Load<Texture2D>("triangle"));
+                        oldTriangle.DrawSize = currentTriangle.DrawSize;
+                        oldTriangle.position = new Vector2(currentTriangle.position.X, currentTriangle.position.Y);
+                        oldTriangle.verticalFlip = currentTriangle.verticalFlip;
+                        oldTriangle.horizontalFlip = currentTriangle.horizontalFlip;
+                        oldTriangle.scale = currentTriangle.scale;
+                        oldTriangle.Update(gameTime);
+
+                        oldTriangles.Add(oldTriangle);
+                        startingHeldMousePosition = Vector2.Zero;
+                        currentTriangle.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
                     }
                 }
             }
@@ -468,6 +527,11 @@ namespace SprintLevelEditor
                 wall.sprite.position = new Vector2(mouseX - (mouseX % BLOCK_SIZE), mouseY - (mouseY % BLOCK_SIZE));
             }
 
+            if (selectedShape == SelectedShape.TRIANGLE)
+            {
+                currentTriangle.position = wall.sprite.position;
+            }
+
             if (editorState != EditorState.SHAPE_SELECTED)
             {
                 cursorOutline.sprite.color = Color.Red;
@@ -476,6 +540,7 @@ namespace SprintLevelEditor
             }
             wall.Update(gameTime);
             cursorOutline.Update(gameTime);
+            currentTriangle.Update(gameTime);
 
             hoveredOutline.sprite.DrawSize = new Size(0, 0);
             isHoveringOverABlock = false;
@@ -576,6 +641,10 @@ namespace SprintLevelEditor
             {
                 world.Draw((spriteBatch) => { oldWall.Draw(spriteBatch, world, BLOCK_SIZE); });
             }
+            foreach (Triangle triangle in oldTriangles)
+            {
+                world.Draw(triangle.Draw);
+            }
             world.Draw((spriteBatch) => { hoveredOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { hoveredBlock.Draw(spriteBatch, world, BLOCK_SIZE); });
             world.Draw((spriteBatch) => { selectedOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
@@ -584,6 +653,10 @@ namespace SprintLevelEditor
             {
                 world.Draw((spriteBatch) => { cursorOutline.Draw(spriteBatch, world, BLOCK_SIZE); });
                 world.Draw((spriteBatch) => { wall.Draw(spriteBatch, world, BLOCK_SIZE); });
+            }
+            else if (selectedShape == SelectedShape.TRIANGLE)
+            {
+                world.Draw(currentTriangle.Draw);
             }
             world.Draw((spriteBatch) => { menu.Draw(spriteBatch, world); });
             world.Draw(startPoint.Draw);
