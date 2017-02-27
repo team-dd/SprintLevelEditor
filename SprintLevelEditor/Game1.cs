@@ -277,7 +277,7 @@ namespace SprintLevelEditor
         {
             MouseState mouseState = Mouse.GetState();
             Vector2 mousePosition = world.CurrentCamera.MouseToScreenCoords(Mouse.GetState().Position);
-            return (block.sprite.rectangle.Contains(mousePosition.X, mousePosition.Y));
+            return (block.sprite.rectangle.Contains(mousePosition.X - (mousePosition.X % BLOCK_SIZE), mousePosition.Y - (mousePosition.Y % BLOCK_SIZE)));
         }
 
         public void MainUpdate(GameTimeWrapper gameTime)
