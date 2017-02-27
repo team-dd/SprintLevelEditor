@@ -77,6 +77,7 @@ namespace SprintLevelEditor
         Marker startPoint;
         Marker endPoint;
         bool justClickedButton;
+        bool justLoaded;
 
         public Game1()
         {
@@ -95,6 +96,7 @@ namespace SprintLevelEditor
             selectedShape = SelectedShape.RECTANGLE;
             shouldIgnoreOneLeftClick = false;
             justClickedButton = false;
+            justLoaded = false;
         }
 
         /// <summary>
@@ -234,14 +236,17 @@ namespace SprintLevelEditor
                 Byte[] levelDataRaw = new Byte[levelSize];
                 fs.Read(levelDataRaw, 0, (int) levelSize);
                 String levelDataString = levelDataRaw.ToString();
-                List<SimpleRectangle> levelData = JsonConvert.DeserializeObject<List<SimpleRectangle>>(System.Text.Encoding.Default.GetString(levelDataRaw));
+                GameSave levelData = JsonConvert.DeserializeObject<GameSave>(System.Text.Encoding.Default.GetString(levelDataRaw));
 
                 this.oldWalls = new List<Wall>();
 
-                foreach (SimpleRectangle rectangle in levelData)
+                foreach (SimpleRectangle rectangle in levelData.rectangles)
                 {
                     this.oldWalls.Add(rectangle.toWall(graphics, BLOCK_SIZE));
                 }
+                startPoint = Marker.fromVector2(Content.Load<Texture2D>("start"), levelData.startPoint, BLOCK_SIZE);
+                endPoint = Marker.fromVector2(Content.Load<Texture2D>("end"), levelData.endPoint, BLOCK_SIZE);
+                justLoaded = true;
             }
         }
 
@@ -271,6 +276,10 @@ namespace SprintLevelEditor
         public void startFresh()
         {
             oldWalls = new List<Wall>();
+            startPoint.position = Vector2.Zero;
+            startPoint.isPlaced = false;
+            endPoint.position = Vector2.Zero;
+            endPoint.isPlaced = false;
         }
 
         public bool isHoveringOverBlock(Wall block)
@@ -289,6 +298,16 @@ namespace SprintLevelEditor
             float mouseX = mousePosition.X;
             float mouseY = mousePosition.Y;
             bool isHoveringOverAnyButton = menu.isHoveringOverAnyButton();
+
+            if (justLoaded)
+            {
+                foreach (Wall wall in oldWalls)
+                {
+                    wall.Update(gameTime);
+                }
+                startPoint.Update();
+                endPoint.Update();
+            }
 
             if (editorState == EditorState.SHAPE_SELECTED)
             {

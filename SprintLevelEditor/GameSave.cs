@@ -12,11 +12,11 @@ namespace SprintLevelEditor
     class GameSave
     {
         [JsonProperty("rectangles")]
-        List<SimpleRectangle> rectangles;
+        public List<SimpleRectangle> rectangles;
         [JsonProperty("start")]
-        Vector2 startPoint;
+        public Vector2 startPoint;
         [JsonProperty("end")]
-        Vector2 endPoint;
+        public Vector2 endPoint;
 
         public GameSave() { }
 
