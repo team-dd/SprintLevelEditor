@@ -578,12 +578,12 @@ namespace SprintLevelEditor
 
             if (!startPoint.isPlaced)
             {
-                startPoint.position = wall.sprite.position;
+                startPoint.position = new Vector2(wall.sprite.position.X + (startPoint.DrawSize.Width / 2), wall.sprite.position.Y + (startPoint.DrawSize.Height / 2));
             }
 
             if (!endPoint.isPlaced)
             {
-                endPoint.position = wall.sprite.position;
+                endPoint.position = new Vector2(wall.sprite.position.X + (endPoint.DrawSize.Width / 8), wall.sprite.position.Y + (endPoint.DrawSize.Height / 8));
             }
 
             hoveredOutline.Update(gameTime);
