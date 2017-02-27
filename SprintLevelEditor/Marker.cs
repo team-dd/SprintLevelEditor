@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GLX;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace SprintLevelEditor
@@ -41,6 +42,11 @@ namespace SprintLevelEditor
             {
                 base.Draw(spriteBatch);
             }
+        }
+
+        public Vector2 toVector2(float blockSize, int xOffset, int yOffset)
+        {
+            return new Vector2(((position.X - xOffset) / blockSize) * 5, ((position.Y - yOffset) / blockSize) * 5);
         }
     }
 }

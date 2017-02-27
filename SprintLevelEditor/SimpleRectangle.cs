@@ -31,7 +31,7 @@ namespace SprintLevelEditor
 
         public Wall toWall(GraphicsDeviceManager graphics, float blockSize)
         {
-            Vector2 position = new Vector2(((X / SCALE) * blockSize) + 1000, ((Y / SCALE) * blockSize) + 1000);
+            Vector2 position = new Vector2(((X / SCALE) * blockSize), ((Y / SCALE) * blockSize));
             Vector2 size = new GLX.Size((Width / SCALE) * blockSize, (Height / SCALE) * blockSize);
             return new Wall(graphics, position, size);
         }

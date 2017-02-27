@@ -213,7 +213,9 @@ namespace SprintLevelEditor
             UIVirtualResolutionRenderer.BackgroundColor = Color.Transparent;
             UICamera = new Camera(UIVirtualResolutionRenderer, Camera.CameraFocus.Center);
             world.AddCamera("UI", UICamera);
-            
+
+            world.CurrentCameraName = "camera1";
+
         }
 
         public void loadGame()
@@ -255,30 +257,9 @@ namespace SprintLevelEditor
             if (saveFileDialog.FileName != "")
             {
                 FileStream fs = (FileStream) saveFileDialog.OpenFile();
-                List<SimpleRectangle> simpleRectangles = new List<SimpleRectangle>();
+                GameSave save = new GameSave(oldWalls, startPoint, endPoint, BLOCK_SIZE);
 
-                int xOffset = (int)oldWalls[0].sprite.position.X;
-                int yOffset = (int)oldWalls[0].sprite.position.Y;
-
-                foreach (Wall oldWall in oldWalls)
-                {
-                    if (oldWall.sprite.position.X < xOffset)
-                    {
-                        xOffset = (int)oldWall.sprite.position.X;
-                    }
-
-                    if (oldWall.sprite.position.Y < yOffset)
-                    {
-                        yOffset = (int)oldWall.sprite.position.Y;
-                    }
-                }
-
-                foreach (Wall oldWall in oldWalls)
-                {
-                    simpleRectangles.Add(SimpleRectangle.fromWall(oldWall, BLOCK_SIZE, xOffset, yOffset));
-                }
-
-                string json = JsonConvert.SerializeObject(simpleRectangles.ToArray(), Formatting.Indented);
+                string json = JsonConvert.SerializeObject(save, Formatting.Indented);
                 int epoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
                 byte[] jsonBytes = Encoding.ASCII.GetBytes(json);
 
