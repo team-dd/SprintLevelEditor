@@ -47,7 +47,7 @@ namespace SprintLevelEditor
         public static Marker fromVector2(Texture2D tex, Vector2 pos, float blockSize)
         {
             Marker marker = new Marker(tex);
-            marker.position = new Vector2((pos.X / blockSize) * 5, (pos.Y / blockSize) * 5);
+            marker.position = new Vector2((pos.X / 5) * blockSize, (pos.Y / 5) * blockSize);
             marker.isPlaced = true;
             return marker;
         }
