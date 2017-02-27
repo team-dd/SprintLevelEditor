@@ -18,6 +18,13 @@ namespace SprintLevelEditor
             sprite = new Sprite(graphics);
         }
 
+        public Wall(GraphicsDeviceManager graphics, Vector2 position, Size size)
+        {
+            sprite = new Sprite(graphics);
+            sprite.position = position;
+            sprite.DrawSize = size;
+        }
+
         public void Update(GameTimeWrapper gameTime)
         {
             sprite.Update(gameTime);

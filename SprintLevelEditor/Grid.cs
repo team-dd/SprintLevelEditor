@@ -18,6 +18,7 @@ namespace SprintLevelEditor
         private int screenWidth;
         private int screenHeight;
         private float blockSize;
+        public Vector2 center;
 
         public Grid(GraphicsDeviceManager graphics, int width, int height, float blockSize)
         {
@@ -47,6 +48,8 @@ namespace SprintLevelEditor
                 Line line = new Line(graphics, Line.Type.Point, start, end, 1);
                 horizontalLines.Add(line);
             }
+
+            center = new Vector2((updatedScreenWidth * 5 / blockSize), (updatedScreenHeight * 5 / blockSize));
         }
 
         public void Show()

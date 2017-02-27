@@ -28,5 +28,12 @@ namespace SprintLevelEditor
             Rectangle rectangle = new Rectangle((int)wall.sprite.position.X, (int)wall.sprite.position.Y, (int)wall.sprite.DrawSize.Width, (int)wall.sprite.DrawSize.Height);
             return new SimpleRectangle((int) (Math.Max(0, (rectangle.X - xOffset) / blockSize) * SCALE), (int) (Math.Max(0, (rectangle.Y - yOffset) / blockSize) * SCALE), (int) (Math.Max(1, rectangle.Width / blockSize) * SCALE), (int) (Math.Max(1, rectangle.Height / blockSize) * SCALE));
         }
+
+        public Wall toWall(GraphicsDeviceManager graphics, float blockSize)
+        {
+            Vector2 position = new Vector2(((X / SCALE) * blockSize) + 1000, ((Y / SCALE) * blockSize) + 1000);
+            Vector2 size = new GLX.Size((Width / SCALE) * blockSize, (Height / SCALE) * blockSize);
+            return new Wall(graphics, position, size);
+        }
     }
 }

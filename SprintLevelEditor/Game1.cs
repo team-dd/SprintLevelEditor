@@ -63,7 +63,9 @@ namespace SprintLevelEditor
         bool isGridOn;
         Camera mainCamera;
         Camera minimapCamera;
+        Camera UICamera;
         VirtualResolutionRenderer minimapVirtualResolutionRenderer;
+        VirtualResolutionRenderer UIVirtualResolutionRenderer;
         Wall minimapBackground;
         Wall hoveredOutline;
         bool isBlockSelected;
@@ -206,6 +208,39 @@ namespace SprintLevelEditor
             world.CurrentCameraName = "camera1";
             world.CurrentCamera.Focus = Camera.CameraFocus.Center;
             world.CurrentCamera.Zoom = 10f;
+
+            UIVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH, SCREEN_HEIGHT), new Size(SCREEN_WIDTH, SCREEN_HEIGHT));
+            UIVirtualResolutionRenderer.BackgroundColor = Color.Transparent;
+            UICamera = new Camera(UIVirtualResolutionRenderer, Camera.CameraFocus.Center);
+            world.AddCamera("UI", UICamera);
+            
+        }
+
+        public void loadGame()
+        {
+            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            openFileDialog.Filter = ".json file (*.json)|*.json";
+            openFileDialog.FilterIndex = 2;
+            openFileDialog.RestoreDirectory = true;
+            openFileDialog.Title = "Open a level";
+            openFileDialog.ShowDialog();
+
+            if (openFileDialog.FileName != "")
+            {
+                FileStream fs = (FileStream)openFileDialog.OpenFile();
+                long levelSize = fs.Length;
+                Byte[] levelDataRaw = new Byte[levelSize];
+                fs.Read(levelDataRaw, 0, (int) levelSize);
+                String levelDataString = levelDataRaw.ToString();
+                List<SimpleRectangle> levelData = JsonConvert.DeserializeObject<List<SimpleRectangle>>(System.Text.Encoding.Default.GetString(levelDataRaw));
+
+                this.oldWalls = new List<Wall>();
+
+                foreach (SimpleRectangle rectangle in levelData)
+                {
+                    this.oldWalls.Add(rectangle.toWall(graphics, BLOCK_SIZE));
+                }
+            }
         }
 
         public void saveGame()
@@ -463,6 +498,11 @@ namespace SprintLevelEditor
                 saveGame();
             }
 
+            if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.O) && previousKeyboardState.IsKeyUp(Keys.O))
+            {
+                loadGame();
+            }
+
             if (keyboardState.IsKeyDown(Keys.LeftControl) && keyboardState.IsKeyDown(Keys.N) && previousKeyboardState.IsKeyUp(Keys.N))
             {
                 startFresh();
@@ -477,35 +517,31 @@ namespace SprintLevelEditor
             if (Mouse.GetState().ScrollWheelValue > previousMouseState.ScrollWheelValue && world.CurrentCamera.Zoom < MAX_BLOCK_SIZE && editorState != EditorState.SHAPE_DRAWING)
             {          
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Zoom = world.CurrentCamera.Zoom + 1f;
+                world.CurrentCamera.Zoom = Math.Min(15f, world.CurrentCamera.Zoom + 1f);
             }
 
             if (keyboardState.IsKeyDown(Keys.Down) && editorState != EditorState.SHAPE_DRAWING)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + (1 * world.CurrentCamera.Zoom));
-                grid.Pan(0, 10);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y + (2f * (16f - world.CurrentCamera.Zoom)));
             }   
 
             if (keyboardState.IsKeyDown(Keys.Up) && editorState != EditorState.SHAPE_DRAWING)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - (1 * world.CurrentCamera.Zoom));
-                grid.Pan(0, -10);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X, world.CurrentCamera.Pan.Y - (2f * (16f - world.CurrentCamera.Zoom)));
             }
 
             if (keyboardState.IsKeyDown(Keys.Left) && editorState != EditorState.SHAPE_DRAWING)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - (1 * world.CurrentCamera.Zoom), world.CurrentCamera.Pan.Y);
-                grid.Pan(-10, 0);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X - (2f * (16f - world.CurrentCamera.Zoom)), world.CurrentCamera.Pan.Y);
             }
 
             if (keyboardState.IsKeyDown(Keys.Right) && editorState != EditorState.SHAPE_DRAWING)
             {
                 world.CurrentCameraName = "camera1";
-                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + (1 * world.CurrentCamera.Zoom), world.CurrentCamera.Pan.Y);
-                grid.Pan(10, 0);
+                world.CurrentCamera.Pan = new Vector2(world.CurrentCamera.Pan.X + (2f * (16f - world.CurrentCamera.Zoom)), world.CurrentCamera.Pan.Y);
             }
 
             if (keyboardState.IsKeyDown(Keys.G) && previousKeyboardState.IsKeyUp(Keys.G)) 
@@ -658,12 +694,20 @@ namespace SprintLevelEditor
             {
                 world.Draw(currentTriangle.Draw);
             }
-            world.Draw((spriteBatch) => { menu.Draw(spriteBatch, world); });
             world.Draw(startPoint.Draw);
             world.Draw(endPoint.Draw);
             
             world.EndDraw();
             DrawMinimap();
+            DrawUI();
+        }
+
+        public void DrawUI()
+        {
+            world.CurrentCameraName = "UI";
+            world.BeginDraw();
+            world.Draw((spriteBatch) => { menu.Draw(spriteBatch, world); });
+            world.EndDraw();
         }
 
         public void DrawMinimap()
