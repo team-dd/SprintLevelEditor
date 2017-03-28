@@ -28,13 +28,22 @@ namespace SprintLevelEditor
             this.shouldShow = shouldShow;
         }
 
-        public Wall(Texture2D movingTex, Texture2D notMovingTex, GraphicsDeviceManager graphics, Vector2 position, Size size)
+        public Wall(Texture2D movingTex, Texture2D notMovingTex, GraphicsDeviceManager graphics, Vector2 position, Size size, bool isMoving)
         {
             sprite = new Sprite(graphics);
             sprite.position = position;
             sprite.DrawSize = size;
             this.movingTex = movingTex;
             this.notMovingTex = notMovingTex;
+            this.isMoving = isMoving;
+            if (isMoving)
+            {
+                isMovingButton = new Sprite(movingTex);
+            }
+            else
+            {
+                isMovingButton = new Sprite(notMovingTex);
+            }
             shouldShow = true;
         }
 

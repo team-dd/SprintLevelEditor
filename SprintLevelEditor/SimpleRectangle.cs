@@ -36,12 +36,7 @@ namespace SprintLevelEditor
         {
             Vector2 position = new Vector2(((X / SCALE) * blockSize), ((Y / SCALE) * blockSize));
             Vector2 size = new GLX.Size((Width / SCALE) * blockSize, (Height / SCALE) * blockSize);
-            Wall wall = new Wall(movingTex, notMovingTex, graphics, position, size);
-            if (IsMoving)
-            {
-                wall.clickIsMovingButton();
-            }
-            return wall;
+            return new Wall(movingTex, notMovingTex, graphics, position, size, IsMoving);
         }
     }
 }
