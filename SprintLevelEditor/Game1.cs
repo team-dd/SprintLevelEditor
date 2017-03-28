@@ -78,6 +78,8 @@ namespace SprintLevelEditor
         Marker endPoint;
         bool justClickedButton;
         bool justLoaded;
+        Texture2D movingTex;
+        Texture2D notMovingTex;
 
         public Game1()
         {
@@ -172,6 +174,9 @@ namespace SprintLevelEditor
 
             menu = new Menu(buttons);
 
+            movingTex = Content.Load<Texture2D>("moving");
+            notMovingTex = Content.Load<Texture2D>("notmoving");
+
             startPoint = new Marker(Content.Load<Texture2D>("start"));
             endPoint = new Marker(Content.Load<Texture2D>("end"));
 
@@ -183,22 +188,22 @@ namespace SprintLevelEditor
             world.gameStates[MainGame].AddDraw(MainDraw);
             world.ActivateGameState(MainGame);
 
-            hoveredBlock = new Wall(graphics);
-            selectedBlock = new Wall(graphics);
+            hoveredBlock = new Wall(movingTex, notMovingTex, graphics, false);
+            selectedBlock = new Wall(movingTex, notMovingTex, graphics, false);
 
             currentTriangle = new Triangle(Content.Load<Texture2D>("triangle"));
             currentTriangle.DrawSize = new Size(10, 10);
             oldTriangles = new List<Triangle>();
 
-            wall = new Wall(graphics);
+            wall = new Wall(movingTex, notMovingTex, graphics, false);
             wall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
             wall.sprite.position = new Vector2(10, 10);
-            minimapBackground = new Wall(graphics);
+            minimapBackground = new Wall(movingTex, notMovingTex, graphics, false);
             minimapBackground.sprite.color = Color.Black;
             minimapBackground.sprite.DrawSize = new Size(99999, 99999);
-            hoveredOutline = new Wall(graphics);
-            selectedOutline = new Wall(graphics);
-            cursorOutline = new Wall(graphics);
+            hoveredOutline = new Wall(movingTex, notMovingTex, graphics, false);
+            selectedOutline = new Wall(movingTex, notMovingTex, graphics, false);
+            cursorOutline = new Wall(movingTex, notMovingTex, graphics, false);
             cursorOutline.sprite.color = Color.Red;
 
             minimapVirtualResolutionRenderer = new VirtualResolutionRenderer(graphics, new Size(SCREEN_WIDTH, SCREEN_HEIGHT), new Size(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10));
@@ -320,6 +325,13 @@ namespace SprintLevelEditor
             {
                 shouldIgnoreOneLeftClick = false;
             }
+            else if (mouseState.MiddleButton == ButtonState.Pressed && previousMouseState.MiddleButton == ButtonState.Released)
+            {
+                if (isHoveringOverABlock)
+                {
+                    hoveredBlock.clickIsMovingButton();
+                }
+            }
             else if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
             {
                 if (isHoveringOverAnyButton)
@@ -331,15 +343,20 @@ namespace SprintLevelEditor
                     if (hoveredBlock == selectedBlock && editorState == EditorState.SHAPE_SELECTED)
                     {
                         editorState = EditorState.SHAPE_START;
-                        selectedBlock = new Wall(graphics);
+                        selectedBlock = new Wall(movingTex, notMovingTex, graphics, false);
                         selectedOutline.sprite.DrawSize = new Size();
                     }
                     else
                     {
                         editorState = EditorState.SHAPE_SELECTED;
+                        wall.shouldShow = false;
                         wall.sprite.position = hoveredBlock.sprite.position;
                         wall.sprite.DrawSize = hoveredBlock.sprite.DrawSize;
-                        selectedOutline = new Wall(graphics);
+                        if (hoveredBlock.isMoving != wall.isMoving)
+                        {
+                            wall.clickIsMovingButton();
+                        }
+                        selectedOutline = new Wall(movingTex, notMovingTex, graphics, false);
                         selectedOutline.sprite.color = Color.DarkRed;
                         selectedOutline.sprite.position = new Vector2(hoveredOutline.sprite.position.X - 1, hoveredOutline.sprite.position.Y - 1);
                         selectedOutline.sprite.DrawSize = new Size(hoveredOutline.sprite.DrawSize.Width + 2, hoveredOutline.sprite.DrawSize.Height + 2);
@@ -352,8 +369,14 @@ namespace SprintLevelEditor
                 else if (editorState == EditorState.SHAPE_SELECTED)
                 {
                     editorState = EditorState.SHAPE_START;
+                    wall.shouldShow = true;
+                    wall.Update(gameTime);
                     oldWalls.Add(wall);
-                    Wall newWall = new Wall(graphics);
+                    Wall newWall = new Wall(movingTex, notMovingTex, graphics, false);
+                    if (wall.isMoving != newWall.isMoving)
+                    {
+                        newWall.clickIsMovingButton();
+                    }
                     newWall.sprite.position = wall.sprite.position;
                     newWall.sprite.DrawSize = new Size(BLOCK_SIZE, BLOCK_SIZE);
                     wall = newWall;
@@ -449,10 +472,10 @@ namespace SprintLevelEditor
 
                     if (selectedShape == SelectedShape.RECTANGLE)
                     {
-                        Wall oldWall = new Wall(graphics);
+                        Wall oldWall = new Wall(movingTex, notMovingTex, graphics, true);
                         oldWall.sprite.DrawSize = wall.sprite.DrawSize;
                         oldWall.sprite.position = new Vector2(wall.sprite.position.X, wall.sprite.position.Y);
-                        oldWall.sprite.Update(gameTime);
+                        oldWall.Update(gameTime);
 
                         oldWalls.Add(oldWall);
                         startingHeldMousePosition = Vector2.Zero;
@@ -580,7 +603,7 @@ namespace SprintLevelEditor
 
             hoveredOutline.sprite.DrawSize = new Size(0, 0);
             isHoveringOverABlock = false;
-            hoveredBlock = new Wall(graphics);
+            hoveredBlock = new Wall(movingTex, notMovingTex, graphics, false);
             List<Wall> reversedWalls = oldWalls;
             reversedWalls.Reverse();
             foreach (Wall oldWall in reversedWalls)

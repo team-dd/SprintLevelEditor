@@ -12,10 +12,20 @@ namespace SprintLevelEditor
     public class Wall
     {
         public Sprite sprite;
+        public bool isMoving;
+        public Texture2D notMovingTex;
+        public Texture2D movingTex;
+        public Sprite isMovingButton;
+        public bool shouldShow;
 
-        public Wall(GraphicsDeviceManager graphics)
+        public Wall(Texture2D movingTex, Texture2D notMovingTex, GraphicsDeviceManager graphics, bool shouldShow)
         {
             sprite = new Sprite(graphics);
+            isMoving = false;
+            this.notMovingTex = notMovingTex;
+            this.movingTex = movingTex;
+            isMovingButton = new Sprite(notMovingTex);
+            this.shouldShow = shouldShow;
         }
 
         public Wall(GraphicsDeviceManager graphics, Vector2 position, Size size)
@@ -25,18 +35,44 @@ namespace SprintLevelEditor
             sprite.DrawSize = size;
         }
 
+        public void clickIsMovingButton()
+        {
+            isMoving = !isMoving;
+
+            if (isMoving)
+            {
+                isMovingButton = new Sprite(movingTex);
+            }
+            else
+            {
+                isMovingButton = new Sprite(notMovingTex);
+            }
+
+            Vector2 wallPosition = sprite.position;
+            Vector2 buttonPosition = new Vector2(wallPosition.X + (sprite.DrawSize.Width / 2), wallPosition.Y + (sprite.DrawSize.Height / 2));
+            isMovingButton.position = buttonPosition;
+        }
+
         public void Update(GameTimeWrapper gameTime)
         {
             sprite.Update(gameTime);
+            if (shouldShow)
+            {
+                Vector2 wallPosition = sprite.position;
+                Vector2 buttonPosition = new Vector2(wallPosition.X + (sprite.DrawSize.Width / 2), wallPosition.Y + (sprite.DrawSize.Height / 2));
+                isMovingButton.position = buttonPosition;
+                isMovingButton.Update(gameTime);
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, World world, float blockSize)
         {
             Vector2 oldPosition = sprite.position;
-            //sprite.position.X = world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).X - (world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).X % blockSize);
-            //sprite.position.Y = world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).Y - (world.CurrentCamera.MouseToScreenCoords(sprite.position.ToPoint()).Y % blockSize);
             sprite.Draw(spriteBatch);
-            //sprite.position = oldPosition;
+            if (shouldShow)
+            {
+                isMovingButton.Draw(spriteBatch);
+            }
         }
     }
 }
