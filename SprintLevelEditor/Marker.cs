@@ -11,6 +11,7 @@ namespace SprintLevelEditor
 {
     class Marker : Sprite
     {
+        private static int SCALE =5;
         private bool shouldRender;
         public bool isPlaced;
 
