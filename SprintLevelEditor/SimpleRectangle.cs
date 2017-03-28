@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace SprintLevelEditor
 {
@@ -31,11 +32,11 @@ namespace SprintLevelEditor
             return new SimpleRectangle((int) (Math.Max(0, (rectangle.X - xOffset) / blockSize) * SCALE), (int) (Math.Max(0, (rectangle.Y - yOffset) / blockSize) * SCALE), (int) (Math.Max(1, rectangle.Width / blockSize) * SCALE), (int) (Math.Max(1, rectangle.Height / blockSize) * SCALE), wall.isMoving);
         }
 
-        public Wall toWall(GraphicsDeviceManager graphics, float blockSize)
+        public Wall toWall(Texture2D movingTex, Texture2D notMovingTex, GraphicsDeviceManager graphics, float blockSize)
         {
             Vector2 position = new Vector2(((X / SCALE) * blockSize), ((Y / SCALE) * blockSize));
             Vector2 size = new GLX.Size((Width / SCALE) * blockSize, (Height / SCALE) * blockSize);
-            Wall wall = new Wall(graphics, position, size);
+            Wall wall = new Wall(movingTex, notMovingTex, graphics, position, size);
             if (IsMoving)
             {
                 wall.clickIsMovingButton();

@@ -247,7 +247,7 @@ namespace SprintLevelEditor
 
                 foreach (SimpleRectangle rectangle in levelData.rectangles)
                 {
-                    this.oldWalls.Add(rectangle.toWall(graphics, BLOCK_SIZE));
+                    this.oldWalls.Add(rectangle.toWall(Content.Load<Texture2D>("moving"), Content.Load<Texture2D>("notmoving"), graphics, BLOCK_SIZE));
                 }
                 startPoint = Marker.fromVector2(Content.Load<Texture2D>("start"), levelData.startPoint, BLOCK_SIZE);
                 endPoint = Marker.fromVector2(Content.Load<Texture2D>("end"), levelData.endPoint, BLOCK_SIZE);
