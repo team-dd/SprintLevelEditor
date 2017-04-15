@@ -158,7 +158,7 @@ namespace SprintLevelEditor
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            world = new World(graphics);
+            world = new World(graphics, Content);
             world.virtualResolutionRenderer.VirtualResolution = new Vector2(SCREEN_WIDTH, SCREEN_HEIGHT);
             circle = new Circle(Content.Load<Texture2D>("circle"));
 
